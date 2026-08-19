@@ -1,0 +1,10 @@
+{
+  "description": "An interactive platform for teens battling anorexia, guiding them through challenges while offering survivor letters and a resource hub for support.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
