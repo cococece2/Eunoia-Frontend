@@ -1,4 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import EiffelTower from './imports/Tower.png';
+import Kyoto from './imports/CherryBlossom.png';
+import Santorini from './imports/Santorini.png'
+import Bali from './imports/Flower.png';
+import Canada from './imports/Canada.png';
+import MachuPicchu from './imports/MachuPichu.png';
+import Maldives from './imports/Shell.png'
+import Hawaii from './imports/Hawaii.png'
+import Rome from './imports/Rome.png'
+import Antarctica from './imports/PolarBear.png'
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -8,14 +18,16 @@ function toXY(lon: number, lat: number) {
 }
 
 const DESTINATIONS = [
-  { id:'paris',       label:'Paris',        flag:'🗼', lon:2.3,   lat:48.9,  tagline:'Where you rediscover the joy of being alive',    color:'#e8ecf2', accent:'#7a8fa8', seas:'North Atlantic', dist:'3,628 nm',  days:'23 days', vibe:'Cafés and golden light' },
-  { id:'kyoto',       label:'Kyoto',        flag:'🌸', lon:135.8, lat:35.0,  tagline:'Ancient gardens where stillness becomes strength', color:'#f0ece8', accent:'#9a8070', seas:'Pacific Ocean',  dist:'11,204 nm', days:'71 days', vibe:'Cherry blossoms & peace' },
-  { id:'santorini',   label:'Santorini',    flag:'⛵', lon:25.4,  lat:36.4,  tagline:'White cliffs, blue domes — sea meets sky',         color:'#e4ecf4', accent:'#6a8aaa', seas:'Mediterranean',  dist:'2,185 nm',  days:'14 days', vibe:'Sunsets and open sky' },
-  { id:'bali',        label:'Bali',         flag:'🌺', lon:115.2, lat:-8.7,  tagline:'Island of healing where nature restores',          color:'#e8f0ea', accent:'#6a9070', seas:'Indian Ocean',   dist:'8,432 nm',  days:'54 days', vibe:'Rice terraces & warmth' },
-  { id:'reykjavik',   label:'Reykjavík',    flag:'🌌', lon:-21.8, lat:64.1,  tagline:'Where the dark sky dances with color',             color:'#eae8f2', accent:'#8080a8', seas:'North Atlantic', dist:'1,680 nm',  days:'11 days', vibe:'Northern lights & hot springs' },
-  { id:'maldives',    label:'Maldives',     flag:'🐠', lon:73.0,  lat:3.2,   tagline:'Crystal waters where peace lives',                 color:'#e2eef2', accent:'#5a8a98', seas:'Indian Ocean',   dist:'7,910 nm',  days:'50 days', vibe:'Turquoise & tranquility' },
-  { id:'machupicchu', label:'Machu Picchu', flag:'🏔️', lon:-72.5, lat:-13.2, tagline:'Above the clouds — see how far you have come',     color:'#eeeae0', accent:'#8a7a50', seas:'South Atlantic',dist:'6,240 nm',  days:'40 days', vibe:'Mist, mountains & wonder' },
-  { id:'capetown',    label:'Cape Town',    flag:'🦁', lon:18.4,  lat:-33.9, tagline:"Where two oceans meet and stories begin again",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
+  { id:'paris',       label:'Paris',        flag:<img src={EiffelTower} alt="Eiffel Tower" />, lon:2.3,   lat:48.9,  tagline:'Where you rediscover the joy of being alive',    color:'#e8ecf2', accent:'#7a8fa8', seas:'North Atlantic', dist:'3,628 nm',  days:'23 days', vibe:'Cafés and golden light' },
+  { id:'kyoto',       label:'Kyoto',        flag:<img src={Kyoto} alt="Kyoto"  />, lon:135.8, lat:35.0,  tagline:'Ancient gardens where stillness becomes strength', color:'#f0ece8', accent:'#9a8070', seas:'Pacific Ocean',  dist:'11,204 nm', days:'71 days', vibe:'Cherry blossoms & peace' },
+  { id:'santorini',   label:'Santorini',    flag:<img src={Santorini} alt="Santorini" />, lon:25.4,  lat:36.4,  tagline:'White cliffs, blue domes — sea meets sky',         color:'#e4ecf4', accent:'#6a8aaa', seas:'Mediterranean',  dist:'2,185 nm',  days:'14 days', vibe:'Sunsets and open sky' },
+  { id:'bali',        label:'Bali',         flag:<img src={Bali} alt="Bali" />, lon:115.2, lat:-8.7,  tagline:'Island of healing where nature restores',          color:'#e8f0ea', accent:'#6a9070', seas:'Indian Ocean',   dist:'8,432 nm',  days:'54 days', vibe:'Rice terraces & warmth' },
+  { id:'canada',      label:'Canada',       flag:<img src={Canada} alt="Canada" />, lon:-21.8, lat:64.1,  tagline:'Where the dark sky dances with color',             color:'#eae8f2', accent:'#8080a8', seas:'North Atlantic', dist:'1,680 nm',  days:'11 days', vibe:'Northern lights & hot springs' },
+  { id:'maldives',    label:'Maldives',     flag:<img src={Maldives} alt='Maldives' />, lon:73.0,  lat:3.2,   tagline:'Crystal waters where peace lives',                 color:'#e2eef2', accent:'#5a8a98', seas:'Indian Ocean',   dist:'7,910 nm',  days:'50 days', vibe:'Turquoise & tranquility' },
+  { id:'machupicchu', label:'Machu Picchu', flag:<img src={MachuPicchu} alt='Machu Picchu' />, lon:-72.5, lat:-13.2, tagline:'Above the clouds — see how far you have come',     color:'#eeeae0', accent:'#8a7a50', seas:'South Atlantic',dist:'6,240 nm',  days:'40 days', vibe:'Mist, mountains & wonder' },
+  { id:'hawaii',      label:'Hawaii',       flag:<img src={Hawaii} alt='Hawaii' />, lon:18.4,  lat:-33.9, tagline:"Where two oceans meet and stories begin again",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
+  { id:'rome',        label:'Rome',         flag:<img src={Rome} alt='Rome' />, lon:18.4,  lat:-33.9, tagline:"Where you travel back in time",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
+  { id:'antarctica',  label:'Antarctica',   flag:<img src={Antarctica} alt='Antarctica' />, lon:18.4,  lat:-33.9, tagline:"Where the wisps of snow tickle your face",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
 ]
 
 const CONTINENTS = [
@@ -1009,7 +1021,7 @@ function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:str
   const [entered, setEntered] = useState(false)
   const dest = DESTINATIONS.find(d=>d.id===destination)
   return (
-    <section id="hero" style={{minHeight:'100vh',position:'relative',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',overflow:'hidden',background:'linear-gradient(180deg,#5a8a9a 0%,#7a9ab0 24%,#9AB3CA 52%,#C6DDED 76%,#dfeaeb 100%)'}}>
+    <section id="hero" style={{minHeight:'100vh',position:'relative',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',overflow:'hidden',background:'linear-gradient(180deg,#dfeaeb 0%,rgb(168, 200, 221) 24%,#b8cedd 52%,#C6DDED 76%,#dfeaeb 100%)'}}>
       <Stars/>
       <div style={{position:'absolute',top:72,right:128,width:52,height:52,borderRadius:'50%',background:'rgba(248,243,238,.88)',boxShadow:'0 0 38px 14px rgba(248,243,238,.28)'}}/>
       {[{t:80,l:'12%',w:220,h:60,d:'0s'},{t:108,l:'36%',w:300,h:80,d:'2s'},{t:62,r:'18%',w:180,h:55,d:'4s'}].map((c,i)=>(
@@ -1165,20 +1177,20 @@ function QuestSection({ totalXP, onXP }:{totalXP:number;onXP:(xp:number)=>void})
 
 function StormSection() {
   return (
-    <section id="storm" style={{position:'relative',background:'linear-gradient(180deg,#3a6272 0%,#2c4a5c 45%,#234050 100%)',padding:'120px 24px',overflow:'hidden'}}>
+    <section id="storm" style={{position:'relative',background:'linear-gradient(180deg,#dbded9 0%,#C6DDED 45%,#daded9 100%)',padding:'120px 24px',overflow:'hidden'}}>
       <RainDrops n={22}/>
       <div style={{position:'absolute',right:'8%',top:'18%',opacity:.3}}><ShipSVG stormy size={100}/></div>
       <div style={{maxWidth:820,margin:'0 auto',position:'relative',zIndex:2}}>
         <div style={{fontSize:12,letterSpacing:'.2em',color:'#9AB3CA',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Understanding the storm</div>
-        <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,52px)',fontWeight:400,color:'#f8f3ee',marginBottom:24,lineHeight:1.2}}>
-          The storm is real.<br/><em style={{fontStyle:'italic',color:'#f0d080'}}>So is the way through it.</em>
+        <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,52px)',fontWeight:400,color:'#5a7a92',marginBottom:24,lineHeight:1.2}}>
+          The storm is real.<br/><em style={{fontStyle:'italic',color:'#fff'}}>So is the way through it.</em>
         </h2>
-        <p style={{fontSize:17,color:'#9AB3CA',lineHeight:1.8,marginBottom:56,maxWidth:600}}>
+        <p style={{fontSize:17,color:'#5a7a92',lineHeight:1.8,marginBottom:56,maxWidth:600}}>
           Anorexia is not a choice or a phase — it is a serious illness that affects your mind, body, and spirit. If you are struggling, you are not alone, and you are not broken. You are sailing through one of the hardest storms there is.
         </p>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:20,marginBottom:52}}>
           {[{stat:'1 in 100',label:'teens are affected by anorexia',icon:'🌊'},{stat:'9 in 10',label:'people recover with the right support',icon:'⚓'},{stat:'Right now',label:'is the right time to reach out',icon:'🌅'}].map(it=>(
-            <div key={it.stat} style={{background:'rgba(255,255,255,.07)',border:'1px solid rgba(198,221,237,.18)',borderRadius:16,padding:'26px 20px',textAlign:'center'}}>
+            <div key={it.stat} style={{background:'#fff',border:'1px solid rgba(198,221,237,.18)',borderRadius:16,padding:'26px 20px',textAlign:'center'}}>
               <div style={{fontSize:28,marginBottom:10}}>{it.icon}</div>
               <div className="font-display" style={{fontSize:28,fontWeight:600,color:'#f0d080',marginBottom:8}}>{it.stat}</div>
               <div style={{fontSize:14,color:'#9AB3CA',lineHeight:1.5}}>{it.label}</div>
@@ -1186,7 +1198,7 @@ function StormSection() {
           ))}
         </div>
         <div style={{background:'rgba(198,221,237,.07)',border:'1px solid rgba(198,221,237,.18)',borderLeft:'3px solid #9AB3CA',borderRadius:16,padding:'22px 28px'}}>
-          <p style={{fontSize:16,color:'#dfeaeb',lineHeight:1.85,margin:0,fontStyle:'italic'}}>"You do not have to have everything figured out to deserve help. You just have to take the next small step — and there are people waiting to sail alongside you."</p>
+          <p style={{fontSize:16,color:'#5a7a92',lineHeight:1.85,margin:0,fontStyle:'italic'}}>"You do not have to have everything figured out to deserve help. You just have to take the next small step — and there are people waiting to sail alongside you."</p>
         </div>
       </div>
       <Waves h={110} c1="#3a6272" c2="#4a7282" c3="#5a8292"/>
