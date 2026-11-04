@@ -939,7 +939,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
           <div style={{fontSize:12,letterSpacing:'.2em',color:'#c49a42',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>Your Sailor & Ship</div>
           <h2 className="font-display" style={{fontSize:'clamp(28px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>Customize Your <em style={{fontStyle:'italic'}}>Journey</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:540,margin:'0 auto'}}>
-            Unlock rewards, decorate your cabin, and collect companions as you progress. Everything is safe, cozy, and free from triggers.
+            Unlock rewards, decorate your cabin, and collect companions as you progress. Everything is safe and cozy! ♡
           </p>
         </div>
 
@@ -1185,7 +1185,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
         <div style={{textAlign:'center',marginBottom:52}}>
           <div style={{fontSize:12,letterSpacing:'.2em',color:'#5a7a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>Ship's quest log</div>
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>Daily <em style={{fontStyle:'italic',color:'#7a6a5a'}}>Voyage Tasks</em></h2>
-          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 36px'}}>Small acts of self-care are how you sail through the storm. Each task earns XP — which also become Gold Anchors to spend on your sailor and cabin.</p>
+          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 36px'}}>Small acts of self-care are how you sail towards your destination. Each task earns XP, which also become Gold Anchors to spend on your sailor and cabin.</p>
           <div style={{maxWidth:480,margin:'0 auto',background:'rgba(255,255,255,.7)',borderRadius:20,padding:'20px 28px',border:'1.5px solid rgba(154,179,202,.25)',backdropFilter:'blur(8px)'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -1301,7 +1301,7 @@ function BottlesSection() {
         <div style={{textAlign:'center',marginBottom:60}}>
           <div style={{fontSize:12,letterSpacing:'.2em',color:'#4a6a82',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Messages from survivors</div>
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:18,lineHeight:1.2}}>Letters in <em style={{fontStyle:'italic',color:'#5a7a92'}}>Bottles</em></h2>
-          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:500,margin:'0 auto'}}>Survivors have sealed their stories in these bottles. Click a bottle — watch the cork fly, and let the letter unfurl.</p>
+          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:500,margin:'0 auto'}}>Survivors have sealed their stories in these bottles. Click a bottle, watch the cork fly, and let the letter unfurl.</p>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:32,justifyItems:'center',paddingBottom:30}}>
           {LETTERS.map(letter=><BottleCard key={letter.id} letter={letter} onClick={()=>handleBottleClick(letter)}/>)}
@@ -1404,9 +1404,9 @@ function LighthouseSection() {
   ]
 
   function quizResult() {
-    if(quizScore<=8)  return { level:'Low',      color:'#6a8a78', bg:'rgba(106,138,120,.1)', border:'rgba(106,138,120,.3)', message:"It looks like food and body image aren't causing you a lot of distress right now. Great job checking in with yourself — that self-awareness matters.", cta:'Continue to explore the site and build your crew!' }
-    if(quizScore<=18) return { level:'Moderate',  color:'#8a7a50', bg:'rgba(138,122,80,.08)', border:'rgba(138,122,80,.28)', message:"Some of these patterns are worth paying attention to. You deserve support — it might really help to talk with a trusted adult, school counselor, or one of the helplines on this page.", cta:'Take a look at the Helplines tab above.' }
-    return               { level:'High',         color:'#9a6060', bg:'rgba(154,96,96,.08)', border:'rgba(154,96,96,.25)', message:"These patterns suggest you might benefit from professional support. Please know this is not a diagnosis — but reaching out to a trusted adult or calling a helpline today could make a real difference.", cta:'Please see the Helplines tab above — help is available right now.' }
+    if(quizScore<=8)  return { level:'Low',      color:'#6a8a78', bg:'rgba(106,138,120,.1)', border:'rgba(106,138,120,.3)', message:"It looks like food and body image aren't causing you a lot of distress right now. Great job checking in with yourself, that self-awareness matters.", cta:'Continue to explore the site and build your crew!' }
+    if(quizScore<=18) return { level:'Moderate',  color:'#8a7a50', bg:'rgba(138,122,80,.08)', border:'rgba(138,122,80,.28)', message:"Some of these patterns are worth paying attention to. You deserve support. It might really help to talk with a trusted adult, school counselor, or one of the helplines on this page.", cta:'Take a look at the Helplines tab above.' }
+    return               { level:'High',         color:'#9a6060', bg:'rgba(154,96,96,.08)', border:'rgba(154,96,96,.25)', message:"These patterns suggest you might benefit from professional support. Please know this is not a diagnosis, but reaching out to a trusted adult or calling a helpline today could make a real difference.", cta:'Please see the Helplines tab above. Help is available right now.' }
   }
 
   return (
@@ -1422,7 +1422,7 @@ function LighthouseSection() {
           </div>
           <div style={{display:'flex',alignItems:'flex-end',gap:20}}>
             <LighthouseSVG/>
-            <p style={{fontSize:14,color:'#7a8a7a',fontStyle:'italic',lineHeight:1.65,maxWidth:180,paddingBottom:24}}>"A lighthouse does not chase ships — it stands steady, casting light so you can find your own way."</p>
+            <p style={{fontSize:14,color:'#7a8a7a',fontStyle:'italic',lineHeight:1.65,maxWidth:180,paddingBottom:24}}>"A lighthouse does not chase ships. It stands steady, casting light so you can find your own way."</p>
           </div>
         </div>
 
