@@ -64,6 +64,9 @@ import Paw from './imports/Paw.png'
 import Thought from './imports/Thought.png'
 import OldPhone from './imports/OldPhone.png'
 import Text from './imports/Text.png'
+import { useAuth } from './useAuth'
+import AuthPage from './AuthPage'
+import CrewRooms from './CrewRooms'
 
 
 
@@ -1155,8 +1158,9 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
   )
 }
 
-function QuestSection({ totalXP, onXP }:{totalXP:number;onXP:(xp:number)=>void}) {
+function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[])=>void}) {
   const [completed, setCompleted] = useState<Set<string>>(new Set())
+    useEffect(()=>{ if(savedCompleted) setCompleted(new Set(savedCompleted)) },[savedCompleted])
   const [floats, setFloats] = useState<{id:number;x:number;y:number;val:number}[]>([])
   const [showConfetti, setShowConfetti] = useState(false)
   const fid = useRef(0)
@@ -1165,7 +1169,7 @@ function QuestSection({ totalXP, onXP }:{totalXP:number;onXP:(xp:number)=>void})
   function toggle(qid:string, xp:number, el:HTMLElement|null) {
     if(completed.has(qid)) return
     const next=new Set(completed); next.add(qid)
-    setCompleted(next); onXP(xp)
+        setCompleted(next); onXP(xp); onCompletedChange?.([...next])
     if(el){ const r=el.getBoundingClientRect(),pr=el.closest('section')!.getBoundingClientRect(); setFloats(f=>[...f,{id:fid.current++,x:r.right-pr.left,y:r.top-pr.top,val:xp}]); setTimeout(()=>setFloats(f=>f.slice(1)),1000) }
     if(next.size===ALL_QUESTS.length){ setTimeout(()=>setShowConfetti(true),200); setTimeout(()=>setShowConfetti(false),3000) }
   }
@@ -1657,8 +1661,9 @@ function Footer() {
   )
 }
 
-function Nav({ active, destination }:{active:string;destination:string|null}) {
+function Nav({ active, destination, user, onLogin, onLogout }:{active:string;destination:string|null;user:{sailor:string}|null;onLogin:()=>void;onLogout:()=>void}) {
   const [scrolled, setScrolled] = useState(false)
+    const pill: React.CSSProperties = {background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)',cursor:'pointer',fontFamily:'Nunito,sans-serif'}
   const dest = DESTINATIONS.find(d=>d.id===destination)
   useEffect(()=>{ const h=()=>setScrolled(window.scrollY>60); window.addEventListener('scroll',h); return ()=>window.removeEventListener('scroll',h) },[])
   return (
@@ -1672,6 +1677,9 @@ function Nav({ active, destination }:{active:string;destination:string|null}) {
           <a key={href} href={href} className={`nav-link ${active===href.slice(1)?'active':''}`} style={{color:active===href.slice(1)?(scrolled?'#4a6a82':'rgba(255,255,255,.95)'):scrolled?'#6a8a98':'rgba(255,255,255,.7)'}}>{label}</a>
         ))}
         <a href="#lighthouse" style={{background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,textDecoration:'none',fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)'}}>Get Help</a>
+                {user
+          ? <button onClick={onLogout} title="Log out" style={pill}>{user.sailor} · Log out</button>
+          : <button onClick={onLogin} style={pill}>Log in</button>}
       </div>
     </nav>
   )
@@ -1686,6 +1694,20 @@ export default function App() {
   const [totalXP, setTotalXP] = useState(0)
   const [myName]  = useState(()=>genSailor())
   const [myColor] = useState(()=>SAILOR_COLORS[Math.floor(Math.random()*SAILOR_COLORS.length)])
+    const auth = useAuth()
+  const [showAuth, setShowAuth] = useState(false)
+  const [savedCompleted, setSavedCompleted] = useState<string[]|undefined>(undefined)
+
+  // When someone logs in, load their saved progress. When they log out, reset to a fresh voyage.
+  useEffect(()=>{
+    if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.completed_quests) }
+    else { setTotalXP(0); setSavedCompleted([]) }
+  },[auth.profile])
+
+  function saveQuests(ids:string[]) {
+    const xp = ALL_QUESTS.filter(q=>ids.includes(q.id)).reduce((s,q)=>s+q.xp,0)
+    auth.saveProgress(xp, ids)
+  }
 
   useEffect(()=>{
     const ids=['hero','destination','quests','storm','letters','chat','sailor','lighthouse','shore']
@@ -1696,7 +1718,8 @@ export default function App() {
 
   return (
     <div style={{fontFamily:'Nunito,sans-serif'}}>
-      <Nav active={activeSection} destination={destination}/>
+            <Nav active={activeSection} destination={destination} user={auth.user} onLogin={()=>setShowAuth(true)} onLogout={auth.signOut}/>
+      {showAuth&&!auth.user&&<AuthPage enabled={auth.enabled} onClose={()=>setShowAuth(false)} signIn={auth.signIn} signUp={auth.signUp}/>}
       {journeyStarted&&(
         <div style={{position:'fixed',right:18,top:'50%',transform:'translateY(-50%)',zIndex:40,display:'flex',flexDirection:'column',gap:9}}>
           {['hero','destination','quests','storm','letters','chat','sailor','lighthouse','shore'].map(id=>(
@@ -1706,10 +1729,10 @@ export default function App() {
       )}
       <HeroSection onEnter={()=>{setJourneyStarted(true);document.getElementById('destination')?.scrollIntoView({behavior:'smooth'})}} destination={destination}/>
       <DestinationSection selected={destination} onSelect={setDestination}/>
-      <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)}/>
+            <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests}/>
       <StormSection/>
       <BottlesSection/>
-      <CrewChatSection myName={myName} myColor={myColor}/>
+            <CrewRooms user={auth.user} onLogin={()=>setShowAuth(true)} decor={<OceanLife/>} waves={<Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
       <SailorSection totalXP={totalXP}/>
       <LighthouseSection/>
       <ShoreSection destination={destination}/>
