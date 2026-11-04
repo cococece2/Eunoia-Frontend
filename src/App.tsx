@@ -9,10 +9,68 @@ import Maldives from './imports/Shell.png'
 import Hawaii from './imports/Hawaii.png'
 import Rome from './imports/Rome.png'
 import Antarctica from './imports/PolarBear.png'
+import Wave from './imports/Wave.png'
+import Sun from './imports/Sun.png'
+import Anchor from './imports/Anchor.png'
+import ChatBubble from './imports/chatbubble.png'
+import Leaf from './imports/Leaf.png'
+import Bucket from './imports/Bucket.png'
+import Compass from './imports/Compass.png'
+import Wheel from './imports/wheel.png'
+import Hat from './imports/Hat.png'
+import Coral from './imports/coral.png'
+import Dolphin from './imports/dolphin.png'
+import Pearl from './imports/pearl.png'
+import Phone from './imports/Phone.png'
+import SeaShell from './imports/seashell.png'
+import Starfish from './imports/starfish.png'
+import Trident from './imports/trident.png'
+import Turtle from './imports/turtle.png'
+import Telescope from './imports/Telescope.png'
+import Cat from './imports/Cat.png'
+import Dog from './imports/Dog.png'
+import Octopus from './imports/Octopus.png'
+import Book from './imports/Book.png'
+import BookStack from './imports/BookStack.png'
+import Star from './imports/Star.png'
+import Couch from './imports/Couch.png'
+import CuteWave from './imports/CuteWave.png'
+import Tea from './imports/Tea.png'
+import Map from './imports/Map.png'
+import Lantern from './imports/Lantern.png'
+import Plant from './imports/Plant.png'
+import Lights from './imports/Lights.png'
+import OpenBook from './imports/OpenBook.png'
+import BlueHeart from './imports/BlueHeart.png'
+import MagnifyingGlass from './imports/MagnifyingGlass.png'
+import Boat from './imports/Boat.png'
+import Shimmer from './imports/Shimmer.png'
+import Wave2 from './imports/Wave2.png'
+import Lock from './imports/Lock.png'
+import AnchorImage from './imports/AnchorImage.png'
+import SeaweedImage from './imports/seaweed.png'
+import Trophy from './imports/Trophy.png'
+import Party from './imports/Party.png'
+import Sunset from './imports/Sunset.png'
+import Flashlight from './imports/Flashlight.png'
+import SOS from './imports/SOS.png'
+import Floaty from './imports/Floaty.png'
+import Siren from './imports/Siren.png'
+import Rainbow from './imports/Rainbow.png'
+import Lightning from './imports/Lightning.png'
+import Caution from './imports/Caution.png'
+import Info from './imports/Info.png'
+import Paw from './imports/Paw.png'
+import Thought from './imports/Thought.png'
+import OldPhone from './imports/OldPhone.png'
+import Text from './imports/Text.png'
+
+
+
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MAP_W = 900, MAP_H = 460, HOME_X = 350, HOME_Y = 128
+const MAP_W = 900, MAP_H = 460, HOME_X = 350, HOME_Y = 128;
 function toXY(lon: number, lat: number) {
   return { x: (lon + 180) / 360 * MAP_W, y: (90 - lat) / 180 * MAP_H }
 }
@@ -49,26 +107,26 @@ const OCEAN_LABELS = [
 // ── Quest data ────────────────────────────────────────────────────────────────
 
 const QUEST_CATS = [
-  { id:'anchor', label:'Anchor Points',    icon:'⚓', color:'#7a9ab0', desc:'Ground yourself in the present moment.',
-    quests:[{id:'a1',text:"Write 3 things your body did for you today",xp:20},{id:'a2',text:'Take 5 slow, deep breaths with your eyes closed',xp:10},{id:'a3',text:"Name one emotion you're feeling right now, without judgment",xp:15}] },
-  { id:'wave',   label:'Wave Riders',      icon:'🌊', color:'#6a8a9a', desc:'Ride the energy of being alive.',
+  { id:'anchor', label:'Anchor Points',   icon: <img src={Anchor} alt="Anchor" style={{ width: '60px', height: '30px', verticalAlign: 'middle' }} />, color:'#7a9ab0', desc:'Ground yourself in the present.',
+  quests:[{id:'a1',text:"Write 3 things your body did for you today",xp:20},{id:'a2',text:'Take 5 slow, deep breaths with your eyes closed',xp:10},{id:'a3',text:"Name one emotion you're feeling right now, without judgment",xp:15}] },
+  { id:'wave',   label:'Wave Riders',      icon: <img src={Wave} alt="Wave" style={{ width: '70px', height: '30px', verticalAlign: 'middle' }} />,  color:'#6a8a9a', desc:'Ride the energy of being alive.',
     quests:[{id:'w1',text:'Move your body for 10 minutes — walk, stretch, dance',xp:25},{id:'w2',text:'Go outside and feel fresh air on your face',xp:15},{id:'w3',text:'Listen to a song that lifts your spirits',xp:10}] },
-  { id:'crew',   label:'Crew Connection',  icon:'💬', color:'#8a7a9a', desc:'No sailor sails alone.',
+  { id:'crew',   label:'Crew Connection',  icon: <img src={ChatBubble} alt="ChatBubble" style={{ width: '60px', height: '30px', verticalAlign: 'middle' }} />, color:'#8a7a9a', desc:'No sailor sails alone.',
     quests:[{id:'c1',text:'Send one kind or honest message to someone you trust',xp:20},{id:'c2',text:'Read a survivor letter from the message bottles',xp:15},{id:'c3',text:"Post a message in the ship's crew chat",xp:15}] },
-  { id:'nourish',label:'Nourishment Quest',icon:'🌱', color:'#6a8a78', desc:'Gentle fuel for your voyage.',
+  { id:'nourish',label:'Nourishment Quest',  icon: <img src={Leaf} alt="Leaf" style={{ width: '60px', height: '30px', verticalAlign: 'middle' }} />, color:'#6a8a78', desc:'Gentle fuel for your voyage.',
     quests:[{id:'n1',text:'Have one full meal sitting down without distractions',xp:30},{id:'n2',text:'Drink 6 glasses of water today',xp:15},{id:'n3',text:'Try something new to eat — even one small bite counts',xp:25}] },
 ]
 const ALL_QUESTS = QUEST_CATS.flatMap(c => c.quests)
 const MAX_XP = ALL_QUESTS.reduce((s,q) => s + q.xp, 0)
 function xpLevel(xp: number) {
-  if (xp < 50)  return { rank:'Deckhand',   icon:'🪣', next:50 }
-  if (xp < 110) return { rank:'First Mate', icon:'🧭', next:110 }
-  if (xp < 175) return { rank:'Navigator',  icon:'⚓', next:175 }
-  return               { rank:'Captain',    icon:'🏴‍☠️', next:MAX_XP }
+  if (xp < 50)  return { rank:'Deckhand',   icon: <img src={Bucket} alt="Bucket" style={{ width: '60px', height: '60px', objectFit: 'contain', verticalAlign: 'middle' }} />, next:50 }
+  if (xp < 110) return { rank:'First Mate', icon: <img src={Compass} alt="Compass" style={{ width: '60px', height: '60px', objectFit: 'contain', verticalAlign: 'middle' }} />, next:110 }
+  if (xp < 175) return { rank:'Navigator',  icon: <img src={Wheel} alt="Wheel" style={{ width: '60px', height: '60px', objectFit: 'contain', verticalAlign: 'middle' }} />,  next:175 }
+  return               { rank:'Captain',    icon: <img src={Hat} alt="Hat" style={{ width: '60px', height: '60px', objectFit: 'contain', verticalAlign: 'middle' }} />,  next:MAX_XP }
 }
 const BADGES = [
-  {id:'first',xp:20,icon:'🌊',label:'First Wave'},{id:'steady',xp:60,icon:'⚓',label:'Steady Sailor'},
-  {id:'nav',xp:120,icon:'🧭',label:'Navigator'},{id:'cap',xp:180,icon:'🏆',label:'Captain'},
+  {id:'first',xp:20,icon:<img src={Wave} alt="Wave" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />,label:'First Wave'},{id:'steady',xp:60,icon:<img src={Anchor} alt="Anchor" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />,label:'Steady Sailor'},
+  {id:'nav',xp:120,icon:<img src={Compass} alt="Compass" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />,label:'Navigator'},{id:'cap',xp:180,icon: <img src={Hat} alt="Hat" style={{ width: '30px', height: '20px', verticalAlign: 'middle' }} />,label:'Captain'},
 ]
 
 // ── Chat data ─────────────────────────────────────────────────────────────────
@@ -81,13 +139,13 @@ const SEED_MSGS = [
   {id:1,sailor:'CoralDrifter_47',color:'#7a9ab0',text:"Hey everyone 👋 Just found this place. Really needed it today.",time:'9:14 AM',isMe:false},
   {id:2,sailor:'TealHarbor_22',  color:'#6a8a9a',text:"Welcome 💙 We're all sailing together here — no judgment.",time:'9:15 AM',isMe:false},
   {id:3,sailor:'SeaSprite_08',   color:'#8a7a9a',text:"Today was hard. I skipped breakfast again. Trying not to be too hard on myself.",time:'9:18 AM',isMe:false},
-  {id:4,sailor:'MoonRipple_31',  color:'#6a8a78',text:"I ate lunch with my family for the first time in months 🌊 Small win.",time:'9:31 AM',isMe:false},
+  {id:4,sailor:'MoonRipple_31',  color:'#6a8a78',text:"I ate lunch with my family for the first time in months! Small win.",time:'9:31 AM',isMe:false},
   {id:5,sailor:'TealHarbor_22',  color:'#6a8a9a',text:"THAT IS HUGE 🎉 Please be proud of yourself.",time:'9:32 AM',isMe:false},
 ]
 const AUTO_REPLIES = [
-  {sailor:'CoralDrifter_47',color:'#7a9ab0',text:"We hear you 🌊 You're not sailing this alone."},
+  {sailor:'CoralDrifter_47',color:'#7a9ab0',text:"We hear you! You're not sailing this alone."},
   {sailor:'TealHarbor_22',  color:'#6a8a9a',text:"Thank you for sharing that. It matters. You matter 💙"},
-  {sailor:'SeaSprite_08',   color:'#8a7a9a',text:"Sending calm waters your way 🫂"},
+  {sailor:'SeaSprite_08',   color:'#8a7a9a',text:"Sending calm waters your way 🌅"},
   {sailor:'MoonRipple_31',  color:'#6a8a78',text:"Same boat here. We've got you ⚓"},
   {sailor:'PearlTide_19',   color:'#9a8a6a',text:"This crew is with you. One wave at a time 💜"},
 ]
@@ -110,12 +168,12 @@ const LETTERS = [
 ]
 
 const RESOURCES = [
-  {name:'NEDA Helpline',         desc:"Call, text 'NEDA' to 741741, or chat online 24/7.",     contact:'1-800-931-2237',   link:'https://www.nationaleatingdisorders.org/help-support/contact-helpline', icon:'📞'},
-  {name:'Crisis Text Line',      desc:"Text HOME to 741741 anytime — free & confidential.",     contact:'Text HOME to 741741',link:'https://www.crisistextline.org', icon:'💬'},
-  {name:'Beat Eating Disorders', desc:"UK charity with helplines and youth community support.", contact:'0808 801 0677',     link:'https://www.beateatingdisorders.org.uk', icon:'🇬🇧'},
-  {name:'Eating Disorder Hope',  desc:"Treatment finders, resources, and recovery stories.",   contact:'Online resources',  link:'https://www.eatingdisorderhope.com', icon:'🌟'},
-  {name:'NAMI HelpLine',         desc:"National Alliance on Mental Illness — free support.",    contact:'1-800-950-6264',    link:'https://www.nami.org/help', icon:'🧠'},
-  {name:'Teen Line',             desc:"Teen-to-teen helpline staffed by trained volunteers.",   contact:'1-800-852-8336',    link:'https://teenlineonline.org', icon:'🌊'},
+  {name:'NEDA Helpline',         desc:"Call, text 'NEDA' to 741741, or chat online 24/7.",     contact:'1-800-931-2237',   link:'https://www.nationaleatingdisorders.org/help-support/contact-helpline', icon: <img src={Phone} alt="Phone" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />},
+  {name:'Crisis Text Line',      desc:"Text HOME to 741741 anytime — free & confidential.",     contact:'Text HOME to 741741',link:'https://www.crisistextline.org', icon: <img src={ChatBubble} alt="ChatBubble" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
+  {name:'Beat Eating Disorders', desc:"UK charity with helplines and youth community support.", contact:'0808 801 0677',     link:'https://www.beateatingdisorders.org.uk', icon: <img src={SeaShell} alt="Seashell" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
+  {name:'Eating Disorder Hope',  desc:"Treatment finders, resources, and recovery stories.",   contact:'Online resources',  link:'https://www.eatingdisorderhope.com', icon: <img src={Star} alt="Star" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
+  {name:'NAMI HelpLine',         desc:"National Alliance on Mental Illness — free support.",    contact:'1-800-950-6264',    link:'https://www.nami.org/help', icon: <img src={Dolphin} alt="Dolphin" style={{ width: '50px', height: '30px', verticalAlign: 'middle'}} />,},
+  {name:'Teen Line',             desc:"Teen-to-teen helpline staffed by trained volunteers.",   contact:'1-800-852-8336',    link:'https://teenlineonline.org', icon: <img src={CuteWave} alt="CuteWave" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
 ]
 
 // ── Sailor Customization data ─────────────────────────────────────────────────
@@ -147,21 +205,21 @@ const AVATAR_OPTIONS = {
   ],
   companions: [
     { id:'none',    label:"None",            cost:0,   baseUnlocked:true,  emoji:''   },
-    { id:'kitten',  label:"Sea Kitten",      cost:60,  baseUnlocked:false, emoji:'🐱' },
-    { id:'corgi',   label:"Corgi",           cost:80,  baseUnlocked:false, emoji:'🐶' },
-    { id:'turtle',  label:"Sea Turtle",      cost:100, baseUnlocked:false, emoji:'🐢' },
-    { id:'octopus', label:"Baby Octopus",    cost:120, baseUnlocked:false, emoji:'🐙' },
+    { id:'kitten',  label:"Sea Kitten",      cost:60,  baseUnlocked:false, emoji: <img src={Cat} alt="Cat" style={{ width: '50px', height: '25px', verticalAlign: 'middle' }} /> },
+    { id:'corgi',   label:"Corgi",           cost:80,  baseUnlocked:false, emoji: <img src={Dog} alt="Dog" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
+    { id:'turtle',  label:"Sea Turtle",      cost:100, baseUnlocked:false, emoji: <img src={Turtle} alt="Turtle" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} /> },
+    { id:'octopus', label:"Baby Octopus",    cost:120, baseUnlocked:false, emoji: <img src={Octopus} alt="Octopus" style={{ width: '30px', height: '35px', verticalAlign: 'middle' }} />,},
   ],
 }
 
 const CABIN_DECOR = [
-  { id:'couch',   label:"Comfy Couch",    emoji:'🛋️', cost:0,   baseUnlocked:true  },
-  { id:'shelf',   label:"Bookshelf",      emoji:'📚', cost:0,   baseUnlocked:true  },
-  { id:'teaset',  label:"Tea Set",        emoji:'🍵', cost:0,   baseUnlocked:true  },
-  { id:'lights',  label:"String Lights",  emoji:'✨', cost:45,  baseUnlocked:false },
-  { id:'map',     label:"Map Poster",     emoji:'🗺️', cost:55,  baseUnlocked:false },
-  { id:'plant',   label:"Potted Plant",   emoji:'🌿', cost:40,  baseUnlocked:false },
-  { id:'lantern', label:"Ship Lantern",   emoji:'🏮', cost:65,  baseUnlocked:false },
+  { id:'couch',   label:"Comfy Couch",    emoji: <img src={Couch} alt="Couch" style={{ width: '20px', height: '20px', verticalAlign: 'middle' }} />, cost:0,   baseUnlocked:true  },
+  { id:'shelf',   label:"Bookshelf",      emoji: <img src={BookStack} alt="BookStack" style={{ width: '20px', height: '20px', verticalAlign: 'middle' }} />, cost:0,   baseUnlocked:true  },
+  { id:'teaset',  label:"Tea Set",        emoji: <img src={Tea} alt="Tea" style={{ width: '40px', height: '30px', verticalAlign: 'middle' }} />, cost:0,   baseUnlocked:true  },
+  { id:'lights',  label:"String Lights",  emoji: <img src={Lights} alt="Lights" style={{ width: '20px', height: '20px', verticalAlign: 'middle' }} />, cost:45,  baseUnlocked:false },
+  { id:'map',     label:"Map Poster",     emoji: <img src={Map} alt="Map" style={{ width: '30px', height: '15px', verticalAlign: 'middle' }} />,cost:55,  baseUnlocked:false },
+  { id:'plant',   label:"Potted Plant",   emoji: <img src={Plant} alt="Plant" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />, cost:40,  baseUnlocked:false },
+  { id:'lantern', label:"Ship Lantern",   emoji: <img src={Lantern} alt="Lantern" style={{ width: '40px', height: '20px', verticalAlign: 'middle' }} />, cost:65,  baseUnlocked:false },
 ]
 
 const NEXT_REWARDS = [
@@ -185,27 +243,27 @@ const NEXT_REWARDS = [
 // ── Anorexia information (sourced from Mayo Clinic + NEDA) ────────────────────
 
 const ANOREXIA_INFO = [
-  { id:'what',       title:'What is Anorexia Nervosa?',  icon:'📖', color:'#7a9ab0',
+  { id:'what',       title:'What is Anorexia Nervosa?',  icon: <img src={OpenBook} alt="OpenBook" style={{ width: '40px', height: '20px', verticalAlign: 'middle' }} />, color:'#7a9ab0',
     source:'Mayo Clinic',
     body:'Anorexia nervosa is an eating disorder characterized by abnormally low body weight, intense fear of gaining weight, and a distorted perception of body image. People with anorexia place extreme value on controlling their weight and shape — using efforts that seriously interfere with daily life, health, and wellbeing.',
     points:["Affects all genders, ages, races, and backgrounds","Is a serious mental and physical health condition","Is NOT a choice, a 'phase,' or a lifestyle","Is treatable — and recovery is fully possible with the right support"] },
-  { id:'restrict',   title:'Restricting Type',           icon:'🍃', color:'#6a8a9a',
+  { id:'restrict',   title:'Restricting Type',           icon: <img src={SeaweedImage} alt="Seaweed" style={{ width: '40px', height: '20px', verticalAlign: 'middle' }} />, color:'#6a8a9a',
     source:'Mayo Clinic / NEDA',
     body:'In the restricting subtype, people severely limit the amount and type of food they eat. This may involve fasting, skipping meals, extreme calorie counting, eliminating entire food groups, and sometimes compulsive exercise.',
     points:['Most commonly recognized subtype of anorexia','Involves strict food rules and rituals','Often accompanied by a strong fear of weight gain','May progress slowly — early signs can be subtle'] },
-  { id:'bingepurge', title:'Binge-Purge Type',           icon:'🌊', color:'#7a7a9a',
+  { id:'bingepurge', title:'Binge-Purge Type',           icon: <img src={Wave2} alt="Wave2" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />, color:'#7a7a9a',
     source:'Mayo Clinic / NEDA',
     body:'Some people with anorexia also have episodes of binge eating (eating large amounts) followed by purging (through vomiting, laxatives, or over-exercise). "Atypical anorexia" occurs at any body weight and is equally serious medically.',
     points:['Combines restriction with binge-purge cycles','Atypical anorexia can occur at any body weight','Purging behaviors carry serious independent health risks','Often accompanied by shame and a feeling of loss of control'] },
-  { id:'signs',      title:'Warning Signs to Know',      icon:'🔍', color:'#8a7a60',
+  { id:'signs',      title:'Warning Signs to Know',      icon: <img src={MagnifyingGlass} alt="Magnifying Glass" style={{ width: '40px', height: '20px', verticalAlign: 'middle' }} />, color:'#8a7a60',
     source:'National Eating Disorders Association (NEDA)',
     body:'Recognizing warning signs — in yourself or someone you care about — is the first step toward getting support. No single sign is definitive, but patterns matter.',
     points:['Dramatic changes in eating habits or food rules','Preoccupation with food, calories, or weight','Withdrawing from meals or social situations involving food','Wearing baggy clothing / expressing disgust about one body','Frequent exercise despite injury, illness, or fatigue','Feeling guilty or anxious after eating'] },
-  { id:'health',     title:'Health Impacts',             icon:'💙', color:'#6a8a78',
+  { id:'health',     title:'Health Impacts',             icon: <img src={BlueHeart} alt="Blue Heart" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />, color:'#6a8a78',
     source:'Mayo Clinic',
     body:'Anorexia affects every system in the body. Many health effects are reversible with proper treatment and nutrition — which is why early help matters so much.',
     points:['Heart problems: the most common serious medical complication','Bone density loss (osteopenia / osteoporosis)','Hormonal disruptions affecting growth and development','Low energy, difficulty concentrating, poor sleep','Weakened immune system, hair and nail changes'] },
-  { id:'recovery',   title:'Recovery is Real',           icon:'🌅', color:'#8a7a6a',
+  { id:'recovery',   title:'Recovery is Real',           icon: <img src={Pearl} alt="Pearl" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} />, color:'#8a7a6a',
     source:'NEDA / American Journal of Psychiatry',
     body:'With appropriate treatment, the vast majority of people with anorexia nervosa recover — some fully, some over a longer journey. Recovery is not linear, but every step forward counts.',
     points:['Studies show 50–70% of people with anorexia fully recover with treatment','Recovery means living a full life — eating, connecting, thriving','Therapy, medical care, and community all play essential roles','Setbacks are not failures — they are part of the path'] },
@@ -372,7 +430,7 @@ function ScrollModal({ letter, onClose }: { letter:typeof LETTERS[0]; onClose:()
           <svg viewBox="0 0 480 12" style={{width:'100%',marginBottom:18,opacity:.4}}><path d="M0,6 C60,0 120,12 180,6 C240,0 300,12 360,6 C420,0 480,12 480,6" stroke="#9a8060" strokeWidth="1.5" fill="none"/></svg>
           {phase==='open' && <div className="scroll-text-reveal" style={{color:'#3a2a1a',lineHeight:1.95,fontSize:14.5,whiteSpace:'pre-line',maxHeight:'52vh',overflowY:'auto',fontFamily:'Georgia,serif'}}>{letter.text}</div>}
           {phase!=='open' && <div style={{height:200}}/>}
-          {phase==='open' && <div style={{marginTop:22,paddingTop:16,borderTop:'1px dashed rgba(154,128,80,.3)',fontSize:13,color:'#9a8060',fontStyle:'italic',textAlign:'center'}}>"You are never sailing alone." ⚓</div>}
+          {phase==='open' && <div style={{marginTop:22,paddingTop:16,borderTop:'1px dashed rgba(154,128,80,.3)',fontSize:13,color:'#9a8060',fontStyle:'italic',textAlign:'center'}}>"You are never sailing alone." <img src={AnchorImage} alt="Anchor Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} /></div>}
         </div>
         <div className="scroll-rod" style={{margin:'0 -2px'}}/>
       </div>
@@ -534,7 +592,7 @@ function WorldMap({ destId }:{destId:string|null}) {
         {dp&&<path d={routePath} fill="none" stroke="#9a7060" strokeWidth="2.5" strokeLinecap="round" pathLength={1} style={{strokeDasharray:'1',strokeDashoffset:'1',animation:'draw-route 2.2s ease-out forwards'}}/>}
         <g transform={`translate(${HOME_X-12},${HOME_Y-16})`}>
           <circle cx="12" cy="20" r="12" fill="white" opacity=".85"/>
-          <text x="12" y="25" textAnchor="middle" fontSize="14">⛵</text>
+          <text x="12" y="25" textAnchor="middle" fontSize="14"><image href={Boat} x="4" y="13" width="16" height="16" /></text>
         </g>
         <text x={HOME_X} y={HOME_Y+18} fill="#2c4a5c" fontSize="10" textAnchor="middle" fontFamily="Nunito,sans-serif" fontWeight="700">YOU ARE HERE</text>
         {dp&&dest&&(
@@ -548,7 +606,7 @@ function WorldMap({ destId }:{destId:string|null}) {
       </svg>
       {dest&&(
         <div style={{padding:'16px 24px',background:'rgba(248,243,238,.9)',borderTop:'1px solid rgba(154,179,202,.2)',display:'flex',flexWrap:'wrap'}}>
-          {[{icon:'🗺️',label:'Distance',val:dest.dist},{icon:'⛵',label:'Sailing time',val:dest.days},{icon:'🌊',label:'Seas',val:dest.seas},{icon:'✨',label:'Vibe',val:dest.vibe}].map((s,i)=>(
+          {[{icon: <img src={Map} alt="Map" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />, label:'Distance',val:dest.dist},{icon: <img src={Boat} alt="Boat" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />,label:'Sailing time',val:dest.days},{icon: <img src={Shimmer} alt="Map" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />,label:'Seas',val:dest.seas},{icon: <img src={Wave2} alt="Map" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />,label:'Vibe',val:dest.vibe}].map((s,i)=>(
             <div key={i} style={{flex:'1 1 130px',padding:'6px 16px',borderRight:i<3?'1px solid rgba(154,179,202,.18)':'none'}}>
               <div style={{fontSize:12,color:'#6a8a98',marginBottom:3}}>{s.icon} {s.label}</div>
               <div style={{fontSize:13,fontWeight:700,color:'#2c4a5c'}}>{s.val}</div>
@@ -647,7 +705,7 @@ function AvatarSVG({ hat='sailor', jacket='stripes', accessory='none', aura='non
         <ellipse cx="80" cy="34" rx="38" ry="9" fill="white" opacity=".95"/>
         <rect x="54" y="14" width="52" height="23" rx="4" fill="white" opacity=".95"/>
         <rect x="54" y="30" width="52" height="6" fill="#9AB3CA"/>
-        <text x="80" y="26" textAnchor="middle" fontSize="10" fill="#2c4a5c">⚓</text>
+        <text x="80" y="26" textAnchor="middle" fontSize="10" fill="#2c4a5c"><image href={AnchorImage} x="75" y="18" width="10" height="10" /></text>
       </>}
       {hat==='beanie'&&<>
         <path d="M46 60 Q48 22 80 18 Q112 22 114 60 Z" fill="#9a8090"/>
@@ -668,7 +726,7 @@ function AvatarSVG({ hat='sailor', jacket='stripes', accessory='none', aura='non
         <rect x="50" y="10" width="60" height="32" rx="4" fill="#2c4a5c"/>
         <rect x="50" y="36" width="60" height="6" fill="#c49a42"/>
         <circle cx="80" cy="25" r="11" fill="#c49a42" opacity=".9"/>
-        <text x="80" y="29" textAnchor="middle" fontSize="11" fill="#2c4a5c">⚓</text>
+        <text x="80" y="29" textAnchor="middle" fontSize="11" fill="#2c4a5c"><image href={AnchorImage} x="75" y="22" width="10" height="10" /></text>
       </>}
       {/* ACCESSORY */}
       {accessory==='telescope'&&<g transform="translate(130,110) rotate(-20)">
@@ -686,7 +744,7 @@ function AvatarSVG({ hat='sailor', jacket='stripes', accessory='none', aura='non
       </g>}
       {accessory==='necklace'&&<>
         <path d="M64 98 Q80 108 96 98" stroke="#c49a42" strokeWidth="2" fill="none"/>
-        <text x="80" y="116" textAnchor="middle" fontSize="12" fill="#c49a42">⚓</text>
+        <text x="80" y="116" textAnchor="middle" fontSize="12" fill="#c49a42"><image href={AnchorImage} x="75" y="110" width="10" height="10" /></text>
       </>}
       {/* COMPANION */}
       {companion==='kitten'&&<g transform="translate(116 132)">
@@ -863,8 +921,8 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
 
   const nextReward = NEXT_REWARDS.filter(r=>r.cost>goldAnchors).sort((a,b)=>a.cost-b.cost)[0]
   const unlockedItems = [
-    ...AVATAR_OPTIONS.auras.filter(i=>!i.baseUnlocked&&isUnlocked(i.id,i.cost,i.baseUnlocked)).map(i=>({label:i.label,type:'Aura',icon:'✨'})),
-    ...AVATAR_OPTIONS.companions.filter(i=>!i.baseUnlocked&&isUnlocked(i.id,i.cost,i.baseUnlocked)).map(i=>({label:i.label,type:'Companion',icon:i.emoji||'🐾'})),
+    ...AVATAR_OPTIONS.auras.filter(i=>!i.baseUnlocked&&isUnlocked(i.id,i.cost,i.baseUnlocked)).map(i=>({label:i.label,type:'Aura',icon:<img src={Shimmer} alt="Shimmer" style={{ width: '40px', height: '16px', verticalAlign: 'middle' }}/>})),
+    ...AVATAR_OPTIONS.companions.filter(i=>!i.baseUnlocked&&isUnlocked(i.id,i.cost,i.baseUnlocked)).map(i=>({label:i.label,type:'Companion',icon:i.emoji||<img src={Paw} alt="Paw Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle'}}/>})),
     ...CABIN_DECOR.filter(i=>!i.baseUnlocked&&isUnlocked(i.id,i.cost,i.baseUnlocked)).map(i=>({label:i.label,type:'Cabin Decor',icon:i.emoji})),
   ]
 
@@ -906,7 +964,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                 </div>
                 {/* Options grid */}
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8}}>
-                  {AVATAR_OPTIONS[activeCategory].map((item: { id:string; label:string; cost:number; baseUnlocked:boolean; color?:string; emoji?:string })=>{
+                  {AVATAR_OPTIONS[activeCategory].map((item: { id:string; label:string; cost:number; baseUnlocked:boolean; color?:string; emoji?:string | React.JSX.Element })=>{
                     const unlocked = isUnlocked(item.id, item.cost, item.baseUnlocked)
                     const stateKey = catKey[activeCategory]
                     const selected = avatar[stateKey] === item.id
@@ -916,7 +974,11 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                         {item.color ? <div style={{width:18,height:18,borderRadius:'50%',background:item.color,border:'1.5px solid rgba(0,0,0,.08)',flexShrink:0}}/> : <span style={{fontSize:14,flexShrink:0}}>{(item as {emoji?:string}).emoji||'✦'}</span>}
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:12,fontWeight:700,color:selected?'#2c4a5c':'#4a6a82',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.label}</div>
-                          {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}>🔒 {item.cost} ⚓</div>}
+                          {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}>
+                          <img src={Lock} alt="Lock" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} />
+                           {item.cost} 
+                           <img src={Anchor} alt="Anchor" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
+                           </div>}
                           {selected&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>Equipped</div>}
                         </div>
                       </button>
@@ -968,14 +1030,15 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
               {nextReward && (
                 <div style={{background:'rgba(248,243,238,.8)',borderRadius:14,padding:'14px'}}>
                   <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:8}}>Next Reward</div>
-                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10}}>Earn {nextReward.cost - goldAnchors} more ⚓ to unlock "{nextReward.label}"</div>
+                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10}}>Earn {nextReward.cost - goldAnchors} more <img src={AnchorImage} alt="Anchor Image" style={{ width: '14px', height: '14px', verticalAlign: 'middle' }} /> to unlock "{nextReward.label}"</div>
                   <div style={{height:8,borderRadius:8,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
                     <div style={{height:'100%',borderRadius:8,background:'linear-gradient(90deg,#c49a42,#f0d080)',width:`${Math.min(100,(goldAnchors/nextReward.cost)*100)}%`,transition:'width .5s ease'}}/>
                   </div>
                 </div>
               )}
               {!nextReward && goldAnchors > 0 && (
-                <div style={{background:'rgba(196,154,66,.08)',border:'1px solid rgba(196,154,66,.3)',borderRadius:12,padding:'12px',fontSize:13,color:'#8a6020',fontWeight:600,textAlign:'center'}}>🏆 All items unlocked — you are a Captain!</div>
+                <div style={{background:'rgba(196,154,66,.08)',border:'1px solid rgba(196,154,66,.3)',borderRadius:12,padding:'12px',fontSize:13,color:'#8a6020',fontWeight:600,textAlign:'center'}}> <img src={Trophy} alt="Trophy Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle', marginRight: '6px' }} />
+                 All items unlocked — you are a Captain!</div>
               )}
             </div>
           </div>
@@ -1001,7 +1064,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                   <span style={{fontSize:18}}>{item.emoji}</span>
                   <div style={{flex:1}}>
                     <div style={{fontSize:13,fontWeight:700,color:isPlaced?'#2c4a5c':'#4a6a82'}}>{item.label}</div>
-                    {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}>🔒 {item.cost} ⚓</div>}
+                    {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}><img src={Lock} alt="Lock" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} /> {item.cost} <img src={AnchorImage} alt="Anchor Image" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} /></div>}
                     {unlocked&&isPlaced&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>Placed ✓</div>}
                   </div>
                 </button>
@@ -1037,15 +1100,15 @@ function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:str
       <div style={{position:'absolute',bottom:'38%',left:'11%',opacity:.35}}><JellySVG color="#C6DDED" size={38}/></div>
       <div style={{position:'absolute',bottom:'44%',right:'15%',opacity:.28}}><JellySVG color="#dfeaeb" size={30}/></div>
       <div className="animate-fade-in-up" style={{textAlign:'center',zIndex:2,padding:'0 24px',maxWidth:680}}>
-        <div style={{fontSize:12,letterSpacing:'.22em',color:'rgba(255,255,255,.85)',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>You are not alone in this storm</div>
+        <div style={{fontSize:12,letterSpacing:'.22em',color:'rgba(255,255,255,.85)',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Your journey. Your pace. Your destination. </div>
         <h1 className="font-display" style={{fontSize:'clamp(40px,7vw,70px)',fontWeight:300,lineHeight:1.15,color:'white',marginBottom:24}}>
-          There is <em style={{fontStyle:'italic',color:'#f0e0a0'}}>shore</em><br/>beyond the storm.
+          Chart your course to <em style={{fontStyle:'italic',color:'#f0e0a0'}}> brighter waters.</em><br/>
         </h1>
         <p style={{fontSize:18,color:'rgba(255,255,255,.85)',lineHeight:1.75,marginBottom:40,maxWidth:480,margin:'0 auto 40px'}}>
-          A safe space for teens navigating the storm of anorexia — pick your destination, read letters from survivors, join your crew, and find your lighthouse.
+          A safe haven for teens navigating anorexia and recovery. Choose your favorite destination, read warm letters from survivors, join your crew, find your lighthouse, and sail towards what makes you feel whole.
         </p>
-        <button onClick={()=>{setEntered(true);setTimeout(onEnter,500)}} style={{background:entered?'rgba(255,255,255,.18)':'rgba(255,255,255,.26)',color:'white',border:'1px solid rgba(255,255,255,.5)',borderRadius:50,padding:'16px 40px',fontSize:16,fontWeight:700,cursor:'pointer',letterSpacing:'.05em',transition:'all .3s',fontFamily:'Nunito,sans-serif',backdropFilter:'blur(8px)'}}>
-          {entered?'Setting sail…':'⚓ Begin the Journey'}
+        <button onClick={()=>{setEntered(true);setTimeout(onEnter,500)}} style={{background:entered?'rgba(255,255,255,.18)':'rgba(255,255,255,.26)',color:'white',border:'1px solid rgba(255,255,255,.5)',borderRadius:50,padding:'16px 40px',fontSize:16,fontWeight:700,cursor:'pointer',letterSpacing:'.05em',transition:'all .3s',fontFamily:'Nunito,sans-serif',backdropFilter:'blur(8px)', display:'inline-flex', alignItems: 'center', justifyContent:'center', gap:8}}>
+          {entered?'Setting sail…':<><img src={Anchor} alt="Anchor" style={{ width: '1.8em', height: '1.1em', verticalAlign: 'middle', flexShrink: 0 }} /> Begin the Journey</>}
         </button>
       </div>
       <Waves h={130} c1="#C6DDED" c2="#9AB3CA" c3="#7a9ab0"/>
@@ -1072,7 +1135,9 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
               <div style={{fontSize:34,marginBottom:10}}>{d.flag}</div>
               <div style={{fontWeight:700,fontSize:15,color:'#2c4a5c',marginBottom:6}}>{d.label}</div>
               <div style={{fontSize:12,color:'#6a8a98',lineHeight:1.5}}>{d.tagline}</div>
-              {selected===d.id&&<div style={{marginTop:10,fontSize:11,fontWeight:700,color:d.accent,letterSpacing:'.1em',textTransform:'uppercase'}}>⚓ Your destination</div>}
+              {selected===d.id&&<div style={{marginTop:10,fontSize:11,fontWeight:700,color:d.accent,letterSpacing:'.1em',textTransform:'uppercase'}}>
+              <img src={Anchor} alt="Anchor" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} />
+              Your destination</div>}
             </div>
           ))}
         </div>
@@ -1121,14 +1186,17 @@ function QuestSection({ totalXP, onXP }:{totalXP:number;onXP:(xp:number)=>void})
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:22}}>{lv.icon}</span>
-                <div><div style={{fontWeight:800,fontSize:16,color:'#2c4a5c'}}>{lv.rank}</div><div style={{fontSize:12,color:'#6a8a98'}}>{totalXP} / {MAX_XP} XP · {totalXP} Gold Anchors ⚓</div></div>
+                <div><div style={{fontWeight:800,fontSize:16,color:'#2c4a5c'}}>{lv.rank}</div><div style={{fontSize:12,color:'#6a8a98'}}>{totalXP} / {MAX_XP} XP · {totalXP} Gold Anchors 
+                <img src={AnchorImage} alt="Anchor Image" style={{ width: '20px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} /></div></div>
               </div>
               <div style={{display:'flex',gap:8}}>{BADGES.map(b=><div key={b.id} title={b.label} style={{fontSize:20,opacity:earnedBadges.find(e=>e.id===b.id)?1:.22,transition:'opacity .4s'}}>{b.icon}</div>)}</div>
             </div>
             <div style={{height:10,borderRadius:10,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
               <div style={{height:'100%',borderRadius:10,background:'linear-gradient(90deg,#9AB3CA,#7a9ab0)',width:`${pct}%`,transition:'width .6s cubic-bezier(.4,0,.2,1)'}}/>
             </div>
-            {allDone&&<div style={{marginTop:12,fontSize:13,fontWeight:700,color:'#5a7a82',textAlign:'center'}}>🎉 All quests complete — you are incredible!</div>}
+            {allDone&&<div style={{marginTop:12,fontSize:13,fontWeight:700,color:'#5a7a82',textAlign:'center'}}>
+            <img src={Party} alt="Party Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle', marginRight: '4px' }} />
+             All quests complete — you are incredible!</div>}
           </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:20}}>
@@ -1151,7 +1219,9 @@ function QuestSection({ totalXP, onXP }:{totalXP:number;onXP:(xp:number)=>void})
                       </div>
                       <div style={{flex:1}}>
                         <div style={{fontSize:14,color:done?'#8a9a98':'#2c4a5c',textDecoration:done?'line-through':'none',lineHeight:1.5,transition:'color .3s'}}>{q.text}</div>
-                        <div style={{fontSize:11,fontWeight:700,color:done?'#9aaab0':cat.color,marginTop:3}}>+{q.xp} XP · +{q.xp} Gold Anchors ⚓</div>
+                        <div style={{fontSize:11,fontWeight:700,color:done?'#9aaab0':cat.color,marginTop:3}}>+{q.xp} XP · +{q.xp} Gold Anchors 
+                        <img src={AnchorImage} alt="Anchor Image" style={{ width: '24px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1161,13 +1231,15 @@ function QuestSection({ totalXP, onXP }:{totalXP:number;onXP:(xp:number)=>void})
           ))}
         </div>
         <div style={{marginTop:28,background:'linear-gradient(135deg,rgba(196,154,66,.1),rgba(154,112,60,.07))',border:'1.5px solid rgba(196,154,66,.3)',borderRadius:20,padding:'24px 28px',display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
-          <span style={{fontSize:36}}>⚡</span>
+          <span style={{fontSize:36}}><img src={Lightning} alt="Lightning Icon" style={{ width: '36px', height: '36px', verticalAlign: 'middle' }} /></span>
           <div style={{flex:1}}>
             <div style={{fontWeight:800,fontSize:16,color:'#5a4020',marginBottom:4}}>EPIC QUEST — Bonus Challenge</div>
             <div style={{fontSize:15,color:'#2c4a5c',marginBottom:6}}>Write one sentence about what "shore" means to you and save it somewhere you will see every day.</div>
-            <div style={{fontSize:12,color:'#c49a42',fontWeight:700}}>+50 XP · +50 Gold Anchors ⚓ · Rare achievement</div>
+            <div style={{fontSize:12,color:'#c49a42',fontWeight:700}}>+50 XP · +50 Gold Anchors 
+            <img src={AnchorImage} alt="Anchor Image" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
+             · Rare achievement</div>
           </div>
-          <span style={{fontSize:28}}>🏆</span>
+          <span style={{fontSize:28}}><img src={Trophy} alt="Trophy" style={{ width: '28px', height: '28px', verticalAlign: 'middle' }} /></span>
         </div>
       </div>
       <Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>
@@ -1181,16 +1253,20 @@ function StormSection() {
       <RainDrops n={22}/>
       <div style={{position:'absolute',right:'8%',top:'18%',opacity:.3}}><ShipSVG stormy size={100}/></div>
       <div style={{maxWidth:820,margin:'0 auto',position:'relative',zIndex:2}}>
-        <div style={{fontSize:12,letterSpacing:'.2em',color:'#9AB3CA',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Understanding the storm</div>
+        <div style={{fontSize:12,letterSpacing:'.2em',color:'#9AB3CA',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Your voyage ahead</div>
         <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,52px)',fontWeight:400,color:'#5a7a92',marginBottom:24,lineHeight:1.2}}>
-          The storm is real.<br/><em style={{fontStyle:'italic',color:'#fff'}}>So is the way through it.</em>
+          Your dream shore is waiting.<br/><em style={{fontStyle:'italic',color:'#fff'}}>And it's a beautiful place to be.</em>
         </h2>
         <p style={{fontSize:17,color:'#5a7a92',lineHeight:1.8,marginBottom:56,maxWidth:600}}>
-          Anorexia is not a choice or a phase — it is a serious illness that affects your mind, body, and spirit. If you are struggling, you are not alone, and you are not broken. You are sailing through one of the hardest storms there is.
+          Anorexia is not a choice or a phase. It is a serious illness that affects your mind, body, and spirit. If you are struggling, you are not alone, and you are not broken. You are sailing through one of the hardest storms there is.
         </p>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:20,marginBottom:52}}>
-          {[{stat:'1 in 100',label:'teens are affected by anorexia',icon:'🌊'},{stat:'9 in 10',label:'people recover with the right support',icon:'⚓'},{stat:'Right now',label:'is the right time to reach out',icon:'🌅'}].map(it=>(
+
+
+          {[{stat:'8 in 100',label:'teens suffer from an eating disorder',icon:<img src={Wave} alt="Wave" style={{width: '70px', height: '35px', verticalAlign: 'middle'}} />},{stat:'8 in 10',label:'people recover with the right support',icon: <img src={Anchor} alt="Anchor" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />},{stat:'Right now',label:'is the right time to reach out',icon: <img src={Sunset} alt="Sunset" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />}].map(it=>(
             <div key={it.stat} style={{background:'#fff',border:'1px solid rgba(198,221,237,.18)',borderRadius:16,padding:'26px 20px',textAlign:'center'}}>
+              
+              
               <div style={{fontSize:28,marginBottom:10}}>{it.icon}</div>
               <div className="font-display" style={{fontSize:28,fontWeight:600,color:'#f0d080',marginBottom:8}}>{it.stat}</div>
               <div style={{fontSize:14,color:'#9AB3CA',lineHeight:1.5}}>{it.label}</div>
@@ -1198,7 +1274,7 @@ function StormSection() {
           ))}
         </div>
         <div style={{background:'rgba(198,221,237,.07)',border:'1px solid rgba(198,221,237,.18)',borderLeft:'3px solid #9AB3CA',borderRadius:16,padding:'22px 28px'}}>
-          <p style={{fontSize:16,color:'#5a7a92',lineHeight:1.85,margin:0,fontStyle:'italic'}}>"You do not have to have everything figured out to deserve help. You just have to take the next small step — and there are people waiting to sail alongside you."</p>
+          <p style={{fontSize:16,color:'#5a7a92',lineHeight:1.85,margin:0,fontStyle:'italic'}}>You do not have to have everything figured out to ask for help. You just have to take the next small step. There are people waiting to sail alongside you. ❤︎</p>
         </div>
       </div>
       <Waves h={110} c1="#3a6272" c2="#4a7282" c3="#5a8292"/>
@@ -1274,7 +1350,7 @@ function CrewChatSection({ myName, myColor }:{myName:string;myColor:string}) {
           <div style={{height:380,overflowY:'auto',padding:'20px 20px 8px',display:'flex',flexDirection:'column',gap:14}}>
             {msgs.map(msg=>(
               <div key={msg.id} className="chat-msg" style={{display:'flex',flexDirection:msg.isMe?'row-reverse':'row',gap:10,alignItems:'flex-start'}}>
-                <div style={{width:34,height:34,borderRadius:'50%',background:`linear-gradient(135deg,${msg.color},rgba(198,221,237,.5))`,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>⚓</div>
+                <div style={{width:34,height:34,borderRadius:'50%',background:`linear-gradient(135deg,${msg.color},rgba(198,221,237,.5))`,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}><img src={AnchorImage} alt="Anchor Image" style={{ width: '30px', height: '18px' }} /></div>
                 <div style={{maxWidth:'72%'}}>
                   <div style={{fontSize:11,color:msg.color,fontWeight:700,marginBottom:4,textAlign:msg.isMe?'right':'left'}}>{msg.sailor}</div>
                   <div style={{background:msg.isMe?`${msg.color}18`:'rgba(255,255,255,.7)',border:msg.isMe?`1px solid ${msg.color}30`:'1px solid rgba(154,179,202,.2)',borderRadius:msg.isMe?'18px 18px 4px 18px':'18px 18px 18px 4px',padding:'10px 14px',fontSize:14,color:'#2c4a5c',lineHeight:1.55}}>{msg.text}</div>
@@ -1284,7 +1360,7 @@ function CrewChatSection({ myName, myColor }:{myName:string;myColor:string}) {
             ))}
             {typing&&(
               <div style={{display:'flex',gap:10,alignItems:'center'}}>
-                <div style={{width:34,height:34,borderRadius:'50%',background:'rgba(154,179,202,.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}>⚓</div>
+                <div style={{width:34,height:34,borderRadius:'50%',background:'rgba(154,179,202,.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:14}}><img src={AnchorImage} alt="Anchor Image" style={{ width: '30px', height: '18px' }} /></div>
                 <div style={{background:'rgba(255,255,255,.7)',border:'1px solid rgba(154,179,202,.2)',borderRadius:'18px 18px 18px 4px',padding:'10px 16px',display:'flex',gap:5,alignItems:'center'}}>
                   {[0,.2,.4].map((d,i)=><div key={i} className="typing-dot" style={{animationDelay:`${d}s`}}/>)}
                 </div>
@@ -1294,10 +1370,10 @@ function CrewChatSection({ myName, myColor }:{myName:string;myColor:string}) {
           </div>
           <div style={{padding:'14px 16px',borderTop:'1px solid rgba(154,179,202,.12)',display:'flex',gap:10,background:'rgba(248,243,238,.4)'}}>
             <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')send()}} placeholder="Send a message to your crew…" maxLength={280} style={{flex:1,background:'rgba(255,255,255,.75)',border:'1.5px solid rgba(154,179,202,.22)',borderRadius:50,padding:'10px 20px',fontSize:14,color:'#2c4a5c',outline:'none',fontFamily:'Nunito,sans-serif',transition:'border-color .2s'}} onFocus={e=>{e.target.style.borderColor='rgba(154,179,202,.55)'}} onBlur={e=>{e.target.style.borderColor='rgba(154,179,202,.22)'}}/>
-            <button onClick={send} disabled={!input.trim()} style={{background:input.trim()?'linear-gradient(135deg,#9AB3CA,#7a9ab0)':'rgba(154,179,202,.18)',color:input.trim()?'white':'#9aaab0',border:'none',borderRadius:50,padding:'10px 22px',fontSize:14,fontWeight:700,cursor:input.trim()?'pointer':'default',fontFamily:'Nunito,sans-serif',transition:'all .2s'}}>Send ⛵</button>
+            <button onClick={send} disabled={!input.trim()} style={{background:input.trim()?'linear-gradient(135deg,#9AB3CA,#7a9ab0)':'rgba(154,179,202,.18)',color:input.trim()?'white':'#9aaab0',border:'none',borderRadius:50,padding:'10px 22px',fontSize:14,fontWeight:700,cursor:input.trim()?'pointer':'default',fontFamily:'Nunito,sans-serif',transition:'all .2s'}}>Send <img src={Boat} alt="Boat Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle', marginLeft: '6px' }} /></button>
           </div>
         </div>
-        <p style={{textAlign:'center',fontSize:12,color:'#8a9aaa',marginTop:14,lineHeight:1.6}}>Safe, anonymous peer support — not a substitute for professional help. Be kind 💙</p>
+        <p style={{textAlign:'center',fontSize:12,color:'#8a9aaa',marginTop:14,lineHeight:1.6}}>Safe, anonymous peer support — not a substitute for professional help. Be kind ♡</p>
       </div>
       <Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>
     </section>
@@ -1316,11 +1392,11 @@ function LighthouseSection() {
   const quizScore = Object.values(answers).reduce((a,b)=>a+b,0)
   const allAnswered = Object.keys(answers).length === QUIZ_QUESTIONS.length
 
-  const tabs: {id:'helplines'|'learn'|'quiz'|'resources'; label:string; icon:string}[] = [
-    {id:'helplines', label:'Get Help Now', icon:'🆘'},
-    {id:'learn',     label:'Learn',        icon:'📖'},
-    {id:'quiz',      label:'Self-Check',   icon:'💭'},
-    {id:'resources', label:'Resources',    icon:'🔦'},
+  const tabs: {id:'helplines'|'learn'|'quiz'|'resources'; label:string; icon:React.ReactNode}[] = [
+    {id:'helplines', label:'Get Help Now', icon: <img src={SOS} alt="SOS" style={{ width: '30px', height: '16px', verticalAlign: 'middle' }} />},
+    {id:'learn',     label:'Learn',        icon: <img src={BookStack} alt='Book Stack' style={{ width: '16px', height: '16px', verticalAlign: 'middle'}} />},
+    {id:'quiz',      label:'Self-Check',   icon: <img src={Thought} alt='Thought Bubble' style={{ width: '25px', height: '16px', verticalAlign: 'middle'}} />},
+    {id:'resources', label:'Resources',    icon: <img src={Flashlight} alt='Flashlight' style={{ width: '25px', height: '16px', verticalAlign: 'middle'}} />},
   ]
 
   function quizResult() {
@@ -1361,7 +1437,7 @@ function LighthouseSection() {
           <div>
             {/* Emergency banner */}
             <div style={{background:'rgba(200,64,64,.08)',border:'2px solid rgba(200,64,64,.3)',borderRadius:20,padding:'20px 28px',marginBottom:24,display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
-              <span style={{fontSize:36}}>🚨</span>
+              <span style={{fontSize:36}}><img src={Siren} alt="Siren" style={{ width: '60px', height: '36px', verticalAlign: 'middle' }} /></span>
               <div style={{flex:1}}>
                 <div style={{fontWeight:800,fontSize:17,color:'#c84040',marginBottom:6}}>In a medical emergency, call 911 immediately</div>
                 <div style={{fontSize:14,color:'#7a5050',lineHeight:1.6}}>If you or someone you know is in immediate physical danger — including medical complications from an eating disorder — do not wait. Call emergency services right away.</div>
@@ -1371,12 +1447,12 @@ function LighthouseSection() {
             {/* Helplines */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16}}>
               {[
-                {name:'NEDA Helpline',        sub:'Eating Disorders',   phone:'1-800-931-2237',       text:'NEDA to 741741',       icon:'📞',  color:'#7a9ab0', desc:"Available Mon–Thu 11am–9pm, Fri 11am–5pm ET. Chat also available at nationaleatingdisorders.org"},
-                {name:'Crisis Text Line',     sub:'Any Crisis',         phone:null,                   text:'HOME to 741741',       icon:'💬',  color:'#6a8a9a', desc:"Free, 24/7, confidential text support for any type of crisis — staffed by trained counselors."},
-                {name:'Teen Line',            sub:'Teens for Teens',    phone:'1-800-852-8336',       text:'TEEN to 839863',       icon:'🌊',  color:'#8a7a9a', desc:"Staffed by trained teen volunteers. Open evenings 6–10 PM PT. You will speak with someone your age."},
-                {name:'NAMI HelpLine',        sub:'Mental Health',      phone:'1-800-950-6264',       text:'NAMI to 741741',       icon:'🧠',  color:'#8a8a7a', desc:"Mon–Fri 10am–10pm ET. Free information, referrals, and support for mental health conditions."},
-                {name:'Childhelp Hotline',    sub:'Youth Crisis',       phone:'1-800-422-4453',       text:null,                   icon:'💙',  color:'#9a8070', desc:"24/7 crisis intervention for children and teens. Also helps connect with local resources."},
-                {name:'988 Suicide & Crisis', sub:'Mental Health Crisis',phone:'988',                  text:'988',                  icon:'⚓',  color:'#6a8a78', desc:"The Suicide and Crisis Lifeline is available 24/7 for anyone in emotional distress or suicidal crisis."},
+                {name:'NEDA Helpline',        sub:'Eating Disorders',   phone:'1-800-931-2237',       text:'NEDA to 741741',       icon: <img src={Phone} alt="Phone" style={{ width: '40px', height: '20px', verticalAlign: 'middle'}} />, color:'#7a9ab0', desc:"Available Mon–Thu 11am–9pm, Fri 11am–5pm ET. Chat also available at nationaleatingdisorders.org"},
+                {name:'Crisis Text Line',     sub:'Any Crisis',         phone:null,                   text:'HOME to 741741',       icon: <img src={ChatBubble} alt="Chat Bubble" style={{ width:  '40px', height: '20px', verticalAlign: 'middle'}} />, color:'#6a8a9a', desc:"Free, 24/7, confidential text support for any type of crisis — staffed by trained counselors."},
+                {name:'Teen Line',            sub:'Teens for Teens',    phone:'1-800-852-8336',       text:'TEEN to 839863',       icon: <img src={Floaty} alt="Floaty" style={{ width:  '40px', height: '20px', verticalAlign: 'middle'}} />,  color:'#8a7a9a', desc:"Staffed by trained teen volunteers. Open evenings 6–10 PM PT. You will speak with someone your age."},
+                {name:'NAMI HelpLine',        sub:'Mental Health',      phone:'1-800-950-6264',       text:'NAMI to 741741',       icon: <img src={SeaShell} alt="Seashell" style={{ width:'40px', height: '20px', verticalAlign: 'middle'}} />,  color:'#8a8a7a', desc:"Mon–Fri 10am–10pm ET. Free information, referrals, and support for mental health conditions."},
+                {name:'Childhelp Hotline',    sub:'Youth Crisis',       phone:'1-800-422-4453',       text:null,                   icon: <img src={Starfish} alt="Starfish" style={{ width:'40px', height: '20px', verticalAlign: 'middle'}} />,  color:'#9a8070', desc:"24/7 crisis intervention for children and teens. Also helps connect with local resources."},
+                {name:'988 Suicide & Crisis', sub:'Mental Health Crisis',phone:'988',                  text:'988',                 icon: <img src={Coral} alt="Coral" style={{ width:'40px', height: '20px', verticalAlign: 'middle'}} />,  color:'#6a8a78', desc:"The Suicide and Crisis Lifeline is available 24/7 for anyone in emotional distress or suicidal crisis."},
               ].map((h,i)=>(
                 <div key={i} style={{background:'rgba(255,255,255,.75)',border:`1.5px solid ${h.color}30`,borderRadius:20,padding:'22px 24px',backdropFilter:'blur(8px)'}}>
                   <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
@@ -1385,8 +1461,8 @@ function LighthouseSection() {
                   </div>
                   <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.55,marginBottom:14}}>{h.desc}</p>
                   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
-                    {h.phone&&<a href={`tel:${h.phone.replace(/\D/g,'')}`} style={{display:'inline-flex',alignItems:'center',gap:6,background:`${h.color}18`,color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:700,textDecoration:'none',border:`1px solid ${h.color}35`}}>📞 {h.phone}</a>}
-                    {h.text&&<div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(248,243,238,.8)',color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:600,border:'1px solid rgba(154,179,202,.2)'}}>💬 Text: {h.text}</div>}
+                    {h.phone&&<a href={`tel:${h.phone.replace(/\D/g,'')}`} style={{display:'inline-flex',alignItems:'center',gap:6,background:`${h.color}18`,color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:700,textDecoration:'none',border:`1px solid ${h.color}35`}}><img src={OldPhone} alt="Phone Icon" style={{ width: '36px', height: '20px', verticalAlign: 'middle', flexShrink: 0, }} /> {h.phone}</a>}
+                    {h.text&&<div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(248,243,238,.8)',color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:600,border:'1px solid rgba(154,179,202,.2)'}}><img src={Text} alt="Text" style={{ width: '36px', height: '20px', verticalAlign: 'middle', flexShrink: 0, }} /> Text: {h.text}</div>}
                   </div>
                 </div>
               ))}
@@ -1401,7 +1477,7 @@ function LighthouseSection() {
         {tab==='learn'&&(
           <div>
             <div style={{background:'rgba(255,255,255,.65)',border:'1px solid rgba(154,179,202,.2)',borderRadius:16,padding:'14px 20px',marginBottom:28,display:'flex',gap:10,alignItems:'center'}}>
-              <span style={{fontSize:18}}>ℹ️</span>
+              <span style={{fontSize:18}}><img src={Info} alt="Info Icon" style={{ width: '35px', height: '18px', verticalAlign: 'middle' }} /></span>
               <div style={{fontSize:14,color:'#5a7a82',lineHeight:1.55}}>Information sourced from the <strong>Mayo Clinic</strong>, <strong>National Eating Disorders Association (NEDA)</strong>, and the <strong>American Journal of Psychiatry</strong>. This is educational, not medical advice.</div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',gap:16}}>
@@ -1441,7 +1517,7 @@ function LighthouseSection() {
           <div style={{maxWidth:720,margin:'0 auto'}}>
             {/* Disclaimer */}
             <div style={{background:'rgba(196,154,66,.08)',border:'1.5px solid rgba(196,154,66,.3)',borderRadius:16,padding:'18px 24px',marginBottom:32,display:'flex',gap:12,alignItems:'flex-start'}}>
-              <span style={{fontSize:22,flexShrink:0}}>💭</span>
+              <span style={{fontSize:22,flexShrink:0}}><img src={Thought} alt="Thought Bubble" style={{ width: '35px', height: '22px', flexShrink: 0 }} /></span>
               <div>
                 <div style={{fontWeight:800,fontSize:14,color:'#8a6020',marginBottom:6}}>This is a self-reflection tool, not a medical diagnosis</div>
                 <div style={{fontSize:13,color:'#7a6a50',lineHeight:1.65}}>This brief check-in is meant to help you notice patterns in your own experience. It cannot diagnose any condition. If you are concerned about your health, please reach out to a doctor, counselor, or one of the helplines on this page.</div>
@@ -1528,7 +1604,7 @@ function LighthouseSection() {
               ))}
             </div>
             <div style={{marginTop:18,background:'rgba(200,64,64,.06)',border:'1px solid rgba(200,64,64,.22)',borderRadius:14,padding:'16px 20px',display:'flex',gap:12,alignItems:'flex-start',maxWidth:760}}>
-              <span style={{fontSize:18,flexShrink:0}}>⚠️</span>
+              <span style={{fontSize:18,flexShrink:0}}><img src={Caution} alt="Caution" style={{ width: '70px', height: '40px', flexShrink: 0 }} /></span>
               <div><div style={{fontSize:14,fontWeight:700,color:'#8a4040',marginBottom:4}}>In a medical emergency</div><div style={{fontSize:13,color:'#6a8a98',lineHeight:1.5}}>Call 911 (US) or your local emergency number immediately. Do not wait.</div></div>
             </div>
           </div>
@@ -1545,13 +1621,15 @@ function ShoreSection({ destination }:{destination:string|null}) {
     <section id="shore" style={{position:'relative',background:'linear-gradient(180deg,#9AB3CA 0%,#C6DDED 35%,#dfeaeb 70%,#f8f3ee 100%)',padding:'100px 24px 80px',overflow:'hidden',textAlign:'center'}}>
       <OceanLife/>
       <div style={{maxWidth:680,margin:'0 auto',position:'relative',zIndex:2}}>
-        <div style={{fontSize:42,marginBottom:20}}>🌅</div>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
+          <img src={Sun} alt="Sun" style={{ width: '150px', height: '80px' }} />
+        </div>
         {dest&&<div style={{fontSize:24,marginBottom:16}}>{dest.flag}</div>}
         <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:20,lineHeight:1.2}}>
-          {dest?<><em style={{fontStyle:'italic',color:'#5a7a92'}}>{dest.label}</em> is waiting.</>:<>Shore is <em style={{fontStyle:'italic',color:'#5a7a92'}}>closer</em> than it feels.</>}
+          {dest?<><em style={{fontStyle:'italic',color:'#5a7a92'}}>{dest.label}</em> is waiting.</>:<>There's a <em style={{fontStyle:'italic',color:'#5a7a92'}}>bright and beautiful</em> place waiting for you.</>}
         </h2>
         <p style={{fontSize:17,color:'#6a8a98',lineHeight:1.8,marginBottom:48}}>
-          {dest?`${dest.tagline}. Recovery is your voyage there — every single step counts.`:"Recovery is not a straight line, but the shore is real. Others have reached it. You can too."}
+          {dest?`${dest.tagline}. Recovery is your voyage there — every single step counts.`:"Others have reached it. You can too."}
         </p>
         <div style={{display:'flex',gap:16,justifyContent:'center',flexWrap:'wrap'}}>
           <a href="#letters"    style={{background:'linear-gradient(135deg,#9AB3CA,#7a9ab0)',color:'white',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15}}>Read survivor letters</a>
@@ -1566,15 +1644,15 @@ function ShoreSection({ destination }:{destination:string|null}) {
 function Footer() {
   return (
     <footer style={{background:'#dfeaeb',padding:'48px 24px 32px',textAlign:'center',borderTop:'1px solid rgba(154,179,202,.2)'}}>
-      <div style={{marginBottom:16,fontSize:24}}>⚓</div>
-      <div className="font-display" style={{fontSize:20,color:'#2c4a5c',marginBottom:12,fontStyle:'italic',fontWeight:300}}>Still Sailing</div>
+      <div style={{marginBottom:16,fontSize:24}}><img src={AnchorImage} alt="Anchor Icon" style={{ width: '24px', height: '24px', verticalAlign: 'middle' }} /></div>
+      <div className="font-display" style={{fontSize:20,color:'#2c4a5c',marginBottom:12,fontStyle:'italic',fontWeight:300}}>Eunora</div>
       <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 28px'}}>This website is a supportive space, not a substitute for medical care. If you are struggling, please reach out to a healthcare professional or one of the resources in the Lighthouse section.</p>
       <div style={{display:'flex',justifyContent:'center',gap:24,flexWrap:'wrap',marginBottom:28}}>
         {[['#hero','Home'],['#destination','Destination'],['#quests','Quests'],['#letters','Letters'],['#sailor','My Sailor'],['#chat','Crew'],['#lighthouse','Lighthouse']].map(([href,label])=>(
           <a key={href} href={href} className="nav-link">{label}</a>
         ))}
       </div>
-      <div style={{fontSize:12,color:'#8a9aaa'}}>Made with care for anyone navigating the storm. You are seen. You are worth it. 💙</div>
+      <div style={{fontSize:12,color:'#8a9aaa'}}>Made with care for anyone navigating the storm. ❤︎</div>
     </footer>
   )
 }
@@ -1586,7 +1664,7 @@ function Nav({ active, destination }:{active:string;destination:string|null}) {
   return (
     <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:50,padding:'14px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrolled?'rgba(223,234,235,.92)':'transparent',backdropFilter:scrolled?'blur(14px)':'none',borderBottom:scrolled?'1px solid rgba(154,179,202,.18)':'none',transition:'all .3s'}}>
       <div className="font-display" style={{color:scrolled?'#2c4a5c':'white',fontSize:17,fontWeight:600,display:'flex',alignItems:'center',gap:8}}>
-        <span style={{color:scrolled?'#9AB3CA':'rgba(255,255,255,.8)'}}>⚓</span> Still Sailing
+        <span style={{color:scrolled?'#9AB3CA':'rgba(255,255,255,.8)'}}>⚓</span> Eunora
         {dest&&<span style={{fontSize:12,fontFamily:'Nunito,sans-serif',fontStyle:'normal',fontWeight:400,color:scrolled?'#7a9ab0':'rgba(255,255,255,.75)'}}>→ {dest.flag} {dest.label}</span>}
       </div>
       <div style={{display:'flex',gap:18,alignItems:'center'}}>
