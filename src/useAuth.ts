@@ -5,11 +5,15 @@ import { supabase } from './lib/supabase'
 export type Profile = {
   id: string
   sailor_name: string
-  total_xp: number
-  completed_quests: string[]
+  total_xp: number            // lifetime XP: only ever goes up
+  completed_quests: string[]  // quests ticked off on `quests_day`
+  quests_day: string | null   // the (local) date those quests belong to, e.g. "2026-11-04"
 }
 
 export type AuthResult = { error?: string; needsConfirm?: boolean }
+
+// Today's date on the person's own device, as YYYY-MM-DD. Daily quests reset when this changes.
+export const todayKey = () => new Date().toLocaleDateString('en-CA')
 
 function friendly(message: string) {
   if (/invalid login/i.test(message)) return 'That email and password do not match.'
@@ -25,7 +29,7 @@ export function useAuth() {
   useEffect(() => {
     const sb = supabase
     if (!sb) return
-    sb.auth.getSession().then(({ data }: { data: { session: Session | null } }) => setSession(data.session))
+    sb.auth.getSession().then(({ data }) => setSession(data.session))
     const { data: sub } = sb.auth.onAuthStateChange((_event, s) => setSession(s))
     return () => sub.subscription.unsubscribe()
   }, [])
@@ -37,7 +41,7 @@ export function useAuth() {
     if (!sb || !uid) { setProfile(null); return }
     let cancelled = false
     sb.from('profiles')
-      .select('id,sailor_name,total_xp,completed_quests')
+      .select('id,sailor_name,total_xp,completed_quests,quests_day')
       .eq('id', uid)
       .single()
       .then(({ data }) => { if (!cancelled && data) setProfile(data as Profile) })
@@ -64,9 +68,9 @@ export function useAuth() {
 
   const signOut = useCallback(async () => { await supabase?.auth.signOut() }, [])
 
-  const saveProgress = useCallback(async (xp: number, completed: string[]) => {
+  const saveProgress = useCallback(async (xp: number, completed: string[], day: string) => {
     if (!supabase || !uid) return
-    await supabase.from('profiles').update({ total_xp: xp, completed_quests: completed }).eq('id', uid)
+    await supabase.from('profiles').update({ total_xp: xp, completed_quests: completed, quests_day: day }).eq('id', uid)
   }, [uid])
 
   return {

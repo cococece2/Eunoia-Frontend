@@ -64,7 +64,9 @@ import Paw from './imports/Paw.png'
 import Thought from './imports/Thought.png'
 import OldPhone from './imports/OldPhone.png'
 import Text from './imports/Text.png'
-import { useAuth } from './useAuth'
+import { useAuth, todayKey } from './useAuth'
+import { useUserLetters, WriteLetterButton } from './UserLetters'
+import { pickDaily } from './dailyQuests'
 import AuthPage from './AuthPage'
 import CrewRooms from './CrewRooms'
 
@@ -1158,20 +1160,30 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
   )
 }
 
-function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[])=>void}) {
+function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void}) {
   const [completed, setCompleted] = useState<Set<string>>(new Set())
     useEffect(()=>{ if(savedCompleted) setCompleted(new Set(savedCompleted)) },[savedCompleted])
+  // New quests every day. If the page is left open past midnight, switch to the new day's list.
+  const [day,setDay] = useState(todayKey())
+  const saveRef = useRef(onCompletedChange); saveRef.current = onCompletedChange
+  useEffect(()=>{
+    let last = todayKey()
+    const t = setInterval(()=>{ const d = todayKey(); if(d!==last){ last=d; setDay(d); setCompleted(new Set()); saveRef.current?.([],0) } },30000)
+    return ()=>clearInterval(t)
+  },[])
   const [floats, setFloats] = useState<{id:number;x:number;y:number;val:number}[]>([])
   const [showConfetti, setShowConfetti] = useState(false)
   const fid = useRef(0)
-  const allDone = completed.size===ALL_QUESTS.length
+  const cats = pickDaily(day, QUEST_CATS)
+  const total = cats.reduce((s,c)=>s+c.quests.length,0)
+  const allDone = completed.size===total
 
   function toggle(qid:string, xp:number, el:HTMLElement|null) {
     if(completed.has(qid)) return
     const next=new Set(completed); next.add(qid)
-        setCompleted(next); onXP(xp); onCompletedChange?.([...next])
+        setCompleted(next); onXP(xp); onCompletedChange?.([...next],xp)
     if(el){ const r=el.getBoundingClientRect(),pr=el.closest('section')!.getBoundingClientRect(); setFloats(f=>[...f,{id:fid.current++,x:r.right-pr.left,y:r.top-pr.top,val:xp}]); setTimeout(()=>setFloats(f=>f.slice(1)),1000) }
-    if(next.size===ALL_QUESTS.length){ setTimeout(()=>setShowConfetti(true),200); setTimeout(()=>setShowConfetti(false),3000) }
+    if(next.size===total){ setTimeout(()=>setShowConfetti(true),200); setTimeout(()=>setShowConfetti(false),3000) }
   }
 
   const lv=xpLevel(totalXP); const pct=Math.min(100,(totalXP/MAX_XP)*100)
@@ -1204,7 +1216,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
           </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:20}}>
-          {QUEST_CATS.map(cat=>(
+          {cats.map(cat=>(
             <div key={cat.id} style={{background:'rgba(255,255,255,.72)',borderRadius:20,padding:'24px',border:`1.5px solid ${cat.color}28`,backdropFilter:'blur(8px)'}}>
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
                 <span style={{fontSize:22}}>{cat.icon}</span>
@@ -1286,7 +1298,8 @@ function StormSection() {
   )
 }
 
-function BottlesSection() {
+function BottlesSection({ user, onLogin }:{user:{id:string;sailor:string}|null;onLogin:()=>void}) {
+  const userLetters = useUserLetters()
   const [openLetter, setOpenLetter] = useState<typeof LETTERS[0]|null>(null)
   const [poppingId, setPoppingId] = useState<number|null>(null)
   function handleBottleClick(letter: typeof LETTERS[0]) {
@@ -1303,9 +1316,12 @@ function BottlesSection() {
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:18,lineHeight:1.2}}>Letters in <em style={{fontStyle:'italic',color:'#5a7a92'}}>Bottles</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:500,margin:'0 auto'}}>Survivors have sealed their stories in these bottles. Click a bottle, watch the cork fly, and let the letter unfurl.</p>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(150px,1fr))',gap:32,justifyItems:'center',paddingBottom:30}}>
-          {LETTERS.map(letter=><BottleCard key={letter.id} letter={letter} onClick={()=>handleBottleClick(letter)}/>)}
+                <div style={{overflowX:'auto',paddingTop:160,marginTop:-160,paddingBottom:30}}>
+          <div style={{display:'flex',gap:32,width:'max-content',margin:'0 auto',padding:'0 8px'}}>
+            {[...LETTERS,...userLetters].map(letter=><div key={letter.id} style={{flex:'0 0 140px'}}><BottleCard letter={letter} onClick={()=>handleBottleClick(letter)}/></div>)}
+          </div>
         </div>
+        <div style={{textAlign:'center',marginTop:20}}><WriteLetterButton user={user} onLogin={onLogin}/></div>
       </div>
       <SeabedDecor/>
       {openLetter&&<ScrollModal letter={openLetter} onClose={()=>setOpenLetter(null)}/>}
@@ -1698,15 +1714,18 @@ export default function App() {
   const [showAuth, setShowAuth] = useState(false)
   const [savedCompleted, setSavedCompleted] = useState<string[]|undefined>(undefined)
 
+    // XP is lifetime (it only goes up). The ticked-off quests only count for the day they were done.
+  const xpRef = useRef(0)
+  xpRef.current = totalXP
+
   // When someone logs in, load their saved progress. When they log out, reset to a fresh voyage.
   useEffect(()=>{
-    if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.completed_quests) }
+    if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests : []) }
     else { setTotalXP(0); setSavedCompleted([]) }
   },[auth.profile])
 
-  function saveQuests(ids:string[]) {
-    const xp = ALL_QUESTS.filter(q=>ids.includes(q.id)).reduce((s,q)=>s+q.xp,0)
-    auth.saveProgress(xp, ids)
+  function saveQuests(ids:string[], gained:number) {
+    auth.saveProgress(xpRef.current+gained, ids, todayKey())
   }
 
   useEffect(()=>{
@@ -1731,7 +1750,7 @@ export default function App() {
       <DestinationSection selected={destination} onSelect={setDestination}/>
             <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests}/>
       <StormSection/>
-      <BottlesSection/>
+          <BottlesSection user={auth.user} onLogin={()=>setShowAuth(true)}/>
             <CrewRooms user={auth.user} onLogin={()=>setShowAuth(true)} decor={<OceanLife/>} waves={<Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
       <SailorSection totalXP={totalXP}/>
       <LighthouseSection/>
