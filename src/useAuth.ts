@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { Session } from '@supabase/supabase-js'
 import { supabase } from './lib/supabase'
+
+type AuthSession = { user: { id: string } }
 
 export type Profile = {
   id: string
@@ -17,20 +18,20 @@ export const todayKey = () => new Date().toLocaleDateString('en-CA')
 
 function friendly(message: string) {
   if (/invalid login/i.test(message)) return 'That email and password do not match.'
-  if (/already registered/i.test(message)) return 'That email already has an account — try logging in.'
+  if (/already registered/i.test(message)) return 'That email already has an account. Try logging in.'
   if (/password/i.test(message) && /characters/i.test(message)) return 'Choose a longer password (8+ characters).'
   return message
 }
 
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null)
+  const [session, setSession] = useState<AuthSession | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
 
   useEffect(() => {
     const sb = supabase
     if (!sb) return
-    sb.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data: sub } = sb.auth.onAuthStateChange((_event, s) => setSession(s))
+    sb.auth.getSession().then(({ data }: { data: { session: AuthSession | null } }) => setSession(data.session))
+    const { data: sub } = sb.auth.onAuthStateChange((_event: string, s: AuthSession | null) => setSession(s))
     return () => sub.subscription.unsubscribe()
   }, [])
 
@@ -44,7 +45,7 @@ export function useAuth() {
       .select('id,sailor_name,total_xp,completed_quests,quests_day')
       .eq('id', uid)
       .single()
-      .then(({ data }) => { if (!cancelled && data) setProfile(data as Profile) })
+      .then(({ data }: { data: Profile | null }) => { if (!cancelled && data) setProfile(data) })
     return () => { cancelled = true }
   }, [uid])
 

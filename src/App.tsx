@@ -69,6 +69,8 @@ import { useUserLetters, WriteLetterButton } from './UserLetters'
 import { pickDaily } from './dailyQuests'
 import AuthPage from './AuthPage'
 import CrewRooms from './CrewRooms'
+import { useI18n, LanguageToggle } from './i18n'
+import { HELPLINES } from './i18n/helplines'
 
 
 
@@ -173,7 +175,7 @@ const LETTERS = [
 ]
 
 const RESOURCES = [
-  {name:'NEDA Helpline',         desc:"Call, text 'NEDA' to 741741, or chat online 24/7.",     contact:'1-800-931-2237',   link:'https://www.nationaleatingdisorders.org/help-support/contact-helpline', icon: <img src={Phone} alt="Phone" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />},
+  {name:'Alliance for Eating Disorders', desc:"Eating disorder helpline for support and referrals. Mon–Fri 9am–7pm ET.", contact:'1-866-662-1235',   link:'https://www.allianceforeatingdisorders.com', icon: <img src={Phone} alt="Phone" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />},
   {name:'Crisis Text Line',      desc:"Text HOME to 741741 anytime — free & confidential.",     contact:'Text HOME to 741741',link:'https://www.crisistextline.org', icon: <img src={ChatBubble} alt="ChatBubble" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
   {name:'Beat Eating Disorders', desc:"UK charity with helplines and youth community support.", contact:'0808 801 0677',     link:'https://www.beateatingdisorders.org.uk', icon: <img src={SeaShell} alt="Seashell" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
   {name:'Eating Disorder Hope',  desc:"Treatment finders, resources, and recovery stories.",   contact:'Online resources',  link:'https://www.eatingdisorderhope.com', icon: <img src={Star} alt="Star" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
@@ -408,6 +410,7 @@ function BottleCard({ letter, onClick }: { letter:typeof LETTERS[0]; onClick:()=
 }
 
 function ScrollModal({ letter, onClose }: { letter:typeof LETTERS[0]; onClose:()=>void }) {
+  const { t } = useI18n()
   const [phase, setPhase] = useState<'appearing'|'unfurling'|'open'>('appearing')
   useEffect(() => {
     const t1 = setTimeout(() => setPhase('unfurling'), 40)
@@ -428,14 +431,14 @@ function ScrollModal({ letter, onClose }: { letter:typeof LETTERS[0]; onClose:()
           <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:20}}>
             <div style={{width:36,height:36,borderRadius:'50%',background:'radial-gradient(circle at 40% 35%,#c00,#600)',boxShadow:'0 2px 8px rgba(0,0,0,.25)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,flexShrink:0}}>✉</div>
             <div>
-              <div className="font-display" style={{color:'#3a2a1a',fontWeight:600,fontSize:18}}>A letter from {letter.name}</div>
-              <div style={{fontSize:11,color:'#9a8060',letterSpacing:'.08em',textTransform:'uppercase',marginTop:2}}>Found washed ashore</div>
+              <div className="font-display" style={{color:'#3a2a1a',fontWeight:600,fontSize:18}}>{t("A letter from {name}",{name:letter.name})}</div>
+              <div style={{fontSize:11,color:'#9a8060',letterSpacing:'.08em',textTransform:'uppercase',marginTop:2}}>{t("Found washed ashore")}</div>
             </div>
           </div>
           <svg viewBox="0 0 480 12" style={{width:'100%',marginBottom:18,opacity:.4}}><path d="M0,6 C60,0 120,12 180,6 C240,0 300,12 360,6 C420,0 480,12 480,6" stroke="#9a8060" strokeWidth="1.5" fill="none"/></svg>
           {phase==='open' && <div className="scroll-text-reveal" style={{color:'#3a2a1a',lineHeight:1.95,fontSize:14.5,whiteSpace:'pre-line',maxHeight:'52vh',overflowY:'auto',fontFamily:'Georgia,serif'}}>{letter.text}</div>}
           {phase!=='open' && <div style={{height:200}}/>}
-          {phase==='open' && <div style={{marginTop:22,paddingTop:16,borderTop:'1px dashed rgba(154,128,80,.3)',fontSize:13,color:'#9a8060',fontStyle:'italic',textAlign:'center'}}>"You are never sailing alone." <img src={AnchorImage} alt="Anchor Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} /></div>}
+          {phase==='open' && <div style={{marginTop:22,paddingTop:16,borderTop:'1px dashed rgba(154,128,80,.3)',fontSize:13,color:'#9a8060',fontStyle:'italic',textAlign:'center'}}>{t("You are never sailing alone.")} <img src={AnchorImage} alt="Anchor Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} /></div>}
         </div>
         <div className="scroll-rod" style={{margin:'0 -2px'}}/>
       </div>
@@ -905,6 +908,7 @@ function CabinInteriorSVG({ placed }: { placed:string[] }) {
 type AvatarState = { hat:string; jacket:string; accessory:string; aura:string; companion:string }
 
 function SailorSection({ totalXP }:{ totalXP:number }) {
+  const { t } = useI18n()
   const [avatar, setAvatar] = useState<AvatarState>({ hat:'sailor', jacket:'stripes', accessory:'none', aura:'sparkle', companion:'none' })
   const [activeCategory, setActiveCategory] = useState<keyof typeof AVATAR_OPTIONS>('hats')
   const [placedItems, setPlacedItems] = useState<string[]>(['couch','shelf','teaset'])
@@ -938,10 +942,10 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
       <div style={{maxWidth:1100,margin:'0 auto',position:'relative',zIndex:2}}>
         {/* Header */}
         <div style={{textAlign:'center',marginBottom:52}}>
-          <div style={{fontSize:12,letterSpacing:'.2em',color:'#c49a42',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>Your Sailor & Ship</div>
-          <h2 className="font-display" style={{fontSize:'clamp(28px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>Customize Your <em style={{fontStyle:'italic'}}>Journey</em></h2>
+          <div style={{fontSize:12,letterSpacing:'.2em',color:'#c49a42',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>{t("Your Sailor & Ship")}</div>
+          <h2 className="font-display" style={{fontSize:'clamp(28px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>{t("Customize Your")} <em style={{fontStyle:'italic'}}>{t("Journey")}</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:540,margin:'0 auto'}}>
-            Unlock rewards, decorate your cabin, and collect companions as you progress. Everything is safe and cozy! ♡
+            {t("Unlock rewards, decorate your cabin, and collect companions as you progress. Everything is safe and cozy! ♡")}
           </p>
         </div>
 
@@ -949,8 +953,8 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
           {/* Avatar card */}
           <div style={card}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20}}>
-              <div style={{fontWeight:700,fontSize:16,color:'#2c4a5c'}}>Sailor Avatar</div>
-              <div style={{background:'rgba(196,154,66,.15)',color:'#8a6020',padding:'5px 14px',borderRadius:50,fontSize:12,fontWeight:700,border:'1px solid rgba(196,154,66,.3)'}}>Edit</div>
+              <div style={{fontWeight:700,fontSize:16,color:'#2c4a5c'}}>{t("Sailor Avatar")}</div>
+              <div style={{background:'rgba(196,154,66,.15)',color:'#8a6020',padding:'5px 14px',borderRadius:50,fontSize:12,fontWeight:700,border:'1px solid rgba(196,154,66,.3)'}}>{t("Edit")}</div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'180px 1fr',gap:20,alignItems:'start'}}>
               {/* Avatar display */}
@@ -963,7 +967,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                 <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:14}}>
                   {(Object.keys(AVATAR_OPTIONS) as Array<keyof typeof AVATAR_OPTIONS>).map(cat=>(
                     <button key={cat} onClick={()=>setActiveCategory(cat)} style={{padding:'6px 14px',borderRadius:50,fontSize:12,fontWeight:700,border:`1.5px solid ${activeCategory===cat?'#9AB3CA':'rgba(154,179,202,.25)'}`,background:activeCategory===cat?'rgba(154,179,202,.18)':'transparent',color:activeCategory===cat?'#3a5a72':'#6a8a98',cursor:'pointer',transition:'all .2s',fontFamily:'Nunito,sans-serif'}}>
-                      {catLabel[cat]}
+                      {t(catLabel[cat])}
                     </button>
                   ))}
                 </div>
@@ -978,13 +982,13 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                         style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:12,border:`1.5px solid ${selected?'#9AB3CA':unlocked?'rgba(154,179,202,.2)':'rgba(154,179,202,.12)'}`,background:selected?'rgba(154,179,202,.18)':unlocked?'rgba(255,255,255,.7)':'rgba(240,235,230,.5)',cursor:unlocked?'pointer':'not-allowed',opacity:unlocked?1:.7,transition:'all .2s',fontFamily:'Nunito,sans-serif',textAlign:'left'}}>
                         {item.color ? <div style={{width:18,height:18,borderRadius:'50%',background:item.color,border:'1.5px solid rgba(0,0,0,.08)',flexShrink:0}}/> : <span style={{fontSize:14,flexShrink:0}}>{(item as {emoji?:string}).emoji||'✦'}</span>}
                         <div style={{flex:1,minWidth:0}}>
-                          <div style={{fontSize:12,fontWeight:700,color:selected?'#2c4a5c':'#4a6a82',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{item.label}</div>
+                          <div style={{fontSize:12,fontWeight:700,color:selected?'#2c4a5c':'#4a6a82',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t(item.label)}</div>
                           {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}>
                           <img src={Lock} alt="Lock" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} />
                            {item.cost} 
                            <img src={Anchor} alt="Anchor" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
                            </div>}
-                          {selected&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>Equipped</div>}
+                          {selected&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>{t("Equipped")}</div>}
                         </div>
                       </button>
                     )
@@ -998,44 +1002,44 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
           <div style={{display:'flex',flexDirection:'column',gap:16}}>
             <div style={card}>
               <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-                <div style={{fontWeight:700,fontSize:15,color:'#2c4a5c'}}>Rewards & Inventory</div>
-                <div style={{background:'rgba(154,179,202,.2)',color:'#3a5a72',padding:'4px 12px',borderRadius:50,fontSize:11,fontWeight:700}}>Open</div>
+                <div style={{fontWeight:700,fontSize:15,color:'#2c4a5c'}}>{t("Rewards & Inventory")}</div>
+                <div style={{background:'rgba(154,179,202,.2)',color:'#3a5a72',padding:'4px 12px',borderRadius:50,fontSize:11,fontWeight:700}}>{t("Open")}</div>
               </div>
               {/* Stats */}
               <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:16}}>
                 <div style={{background:'rgba(248,243,238,.8)',borderRadius:12,padding:'12px 14px'}}>
-                  <div style={{fontSize:11,color:'#8a9aa8',marginBottom:4}}>Currency</div>
+                  <div style={{fontSize:11,color:'#8a9aa8',marginBottom:4}}>{t("Currency")}</div>
                   <div style={{fontSize:22,fontWeight:800,color:'#2c4a5c'}}>{goldAnchors}</div>
-                  <div style={{fontSize:11,color:'#8a9aa8'}}>Gold Anchors</div>
+                  <div style={{fontSize:11,color:'#8a9aa8'}}>{t("Gold Anchors")}</div>
                 </div>
                 <div style={{background:'rgba(248,243,238,.8)',borderRadius:12,padding:'12px 14px'}}>
-                  <div style={{fontSize:11,color:'#8a9aa8',marginBottom:4}}>Level</div>
+                  <div style={{fontSize:11,color:'#8a9aa8',marginBottom:4}}>{t("Level")}</div>
                   <div style={{fontSize:22,fontWeight:800,color:'#2c4a5c'}}>{lv.icon}</div>
-                  <div style={{fontSize:11,color:'#8a9aa8'}}>{lv.rank}</div>
+                  <div style={{fontSize:11,color:'#8a9aa8'}}>{t(lv.rank)}</div>
                 </div>
               </div>
               {/* Unlocked items */}
               {unlockedItems.length > 0 && (
                 <>
-                  <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:10,letterSpacing:'.06em',textTransform:'uppercase'}}>Unlocked Items</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:10,letterSpacing:'.06em',textTransform:'uppercase'}}>{t("Unlocked Items")}</div>
                   <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
                     {unlockedItems.slice(0,4).map((it,i)=>(
                       <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',background:'rgba(248,243,238,.7)',borderRadius:10}}>
                         <div style={{width:32,height:32,borderRadius:8,background:'rgba(198,221,237,.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0}}>{it.icon}</div>
-                        <div><div style={{fontSize:13,fontWeight:600,color:'#2c4a5c'}}>{it.label}</div><div style={{fontSize:11,color:'#8a9aa8'}}>{it.type}</div></div>
+                        <div><div style={{fontSize:13,fontWeight:600,color:'#2c4a5c'}}>{t(it.label)}</div><div style={{fontSize:11,color:'#8a9aa8'}}>{t(it.type)}</div></div>
                       </div>
                     ))}
                   </div>
                 </>
               )}
               {unlockedItems.length === 0 && (
-                <div style={{fontSize:13,color:'#8a9aa8',marginBottom:16,lineHeight:1.5}}>Complete quests to earn Gold Anchors and unlock items!</div>
+                <div style={{fontSize:13,color:'#8a9aa8',marginBottom:16,lineHeight:1.5}}>{t("Complete quests to earn Gold Anchors and unlock items!")}</div>
               )}
               {/* Next reward */}
               {nextReward && (
                 <div style={{background:'rgba(248,243,238,.8)',borderRadius:14,padding:'14px'}}>
-                  <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:8}}>Next Reward</div>
-                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10}}>Earn {nextReward.cost - goldAnchors} more <img src={AnchorImage} alt="Anchor Image" style={{ width: '14px', height: '14px', verticalAlign: 'middle' }} /> to unlock "{nextReward.label}"</div>
+                  <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:8}}>{t("Next Reward")}</div>
+                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10}}>{t("Earn {n} more",{n:nextReward.cost - goldAnchors})} <img src={AnchorImage} alt="Anchor Image" style={{ width: '14px', height: '14px', verticalAlign: 'middle' }} /> {t('to unlock "{item}"',{item:t(nextReward.label)})}</div>
                   <div style={{height:8,borderRadius:8,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
                     <div style={{height:'100%',borderRadius:8,background:'linear-gradient(90deg,#c49a42,#f0d080)',width:`${Math.min(100,(goldAnchors/nextReward.cost)*100)}%`,transition:'width .5s ease'}}/>
                   </div>
@@ -1043,7 +1047,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
               )}
               {!nextReward && goldAnchors > 0 && (
                 <div style={{background:'rgba(196,154,66,.08)',border:'1px solid rgba(196,154,66,.3)',borderRadius:12,padding:'12px',fontSize:13,color:'#8a6020',fontWeight:600,textAlign:'center'}}> <img src={Trophy} alt="Trophy Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle', marginRight: '6px' }} />
-                 All items unlocked — you are a Captain!</div>
+                 {t("All items unlocked — you are a Captain!")}</div>
               )}
             </div>
           </div>
@@ -1052,8 +1056,8 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
         {/* Cabin card */}
         <div style={card}>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-            <div style={{fontWeight:700,fontSize:16,color:'#2c4a5c'}}>Boat Cabin Interior</div>
-            <div style={{background:'rgba(154,179,202,.18)',color:'#3a5a72',padding:'5px 14px',borderRadius:50,fontSize:12,fontWeight:700,border:'1px solid rgba(154,179,202,.28)'}}>Decorate</div>
+            <div style={{fontWeight:700,fontSize:16,color:'#2c4a5c'}}>{t("Boat Cabin Interior")}</div>
+            <div style={{background:'rgba(154,179,202,.18)',color:'#3a5a72',padding:'5px 14px',borderRadius:50,fontSize:12,fontWeight:700,border:'1px solid rgba(154,179,202,.28)'}}>{t("Decorate")}</div>
           </div>
           <CabinInteriorSVG placed={placedItems}/>
           {/* Decor items */}
@@ -1068,9 +1072,9 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                 }} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',borderRadius:12,border:`1.5px solid ${isPlaced?'#9AB3CA':unlocked?'rgba(154,179,202,.2)':'rgba(154,179,202,.12)'}`,background:isPlaced?'rgba(154,179,202,.15)':unlocked?'rgba(255,255,255,.8)':'rgba(240,235,230,.6)',cursor:unlocked?'pointer':'not-allowed',opacity:unlocked?1:.65,transition:'all .2s',fontFamily:'Nunito,sans-serif',textAlign:'left'}}>
                   <span style={{fontSize:18}}>{item.emoji}</span>
                   <div style={{flex:1}}>
-                    <div style={{fontSize:13,fontWeight:700,color:isPlaced?'#2c4a5c':'#4a6a82'}}>{item.label}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:isPlaced?'#2c4a5c':'#4a6a82'}}>{t(item.label)}</div>
                     {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}><img src={Lock} alt="Lock" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} /> {item.cost} <img src={AnchorImage} alt="Anchor Image" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} /></div>}
-                    {unlocked&&isPlaced&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>Placed ✓</div>}
+                    {unlocked&&isPlaced&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>{t("Placed ✓")}</div>}
                   </div>
                 </button>
               )
@@ -1086,6 +1090,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
 // ── Page sections ─────────────────────────────────────────────────────────────
 
 function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:string|null}) {
+  const { t } = useI18n()
   const [entered, setEntered] = useState(false)
   const dest = DESTINATIONS.find(d=>d.id===destination)
   return (
@@ -1098,31 +1103,32 @@ function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:str
       {dest&&(
         <div className="animate-fade-in-up" style={{position:'absolute',top:100,left:40,background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.35)',borderRadius:50,padding:'8px 20px',backdropFilter:'blur(10px)',display:'flex',alignItems:'center',gap:8}}>
           <span style={{fontSize:18}}>{dest.flag}</span>
-          <span style={{fontSize:13,fontWeight:700,color:'white',letterSpacing:'.05em'}}>Sailing to {dest.label}</span>
+          <span style={{fontSize:13,fontWeight:700,color:'white',letterSpacing:'.05em'}}>{t("Sailing to {place}",{place:t(dest.label)})}</span>
         </div>
       )}
       <div style={{position:'absolute',bottom:'28%',left:'50%',transform:'translateX(-50%)'}}><ShipSVG size={130}/></div>
       <div style={{position:'absolute',bottom:'38%',left:'11%',opacity:.35}}><JellySVG color="#C6DDED" size={38}/></div>
       <div style={{position:'absolute',bottom:'44%',right:'15%',opacity:.28}}><JellySVG color="#dfeaeb" size={30}/></div>
       <div className="animate-fade-in-up" style={{textAlign:'center',zIndex:2,padding:'0 24px',maxWidth:680}}>
-        <div style={{fontSize:12,letterSpacing:'.22em',color:'rgba(255,255,255,.85)',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Your journey. Your pace. Your destination. </div>
+        <div style={{fontSize:12,letterSpacing:'.22em',color:'rgba(255,255,255,.85)',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>{t("Your journey. Your pace. Your destination.")}</div>
         <h1 className="font-display" style={{fontSize:'clamp(40px,7vw,70px)',fontWeight:300,lineHeight:1.15,color:'white',marginBottom:24}}>
-          Chart your course to <em style={{fontStyle:'italic',color:'#f0e0a0'}}> brighter waters.</em><br/>
+          {t("Chart your course to")} <em style={{fontStyle:'italic',color:'#f0e0a0'}}>{t("brighter waters.")}</em><br/>
         </h1>
         <p style={{fontSize:18,color:'rgba(255,255,255,.85)',lineHeight:1.75,marginBottom:40,maxWidth:480,margin:'0 auto 40px'}}>
-          A safe haven for teens navigating anorexia and recovery. Choose your favorite destination, read warm letters from survivors, join your crew, find your lighthouse, and sail towards what makes you feel whole.
+          {t("A safe haven for teens navigating anorexia and recovery. Choose your favorite destination, read warm letters from survivors, join your crew, find your lighthouse, and sail towards what makes you feel whole.")}
         </p>
         <button onClick={()=>{setEntered(true);setTimeout(onEnter,500)}} style={{background:entered?'rgba(255,255,255,.18)':'rgba(255,255,255,.26)',color:'white',border:'1px solid rgba(255,255,255,.5)',borderRadius:50,padding:'16px 40px',fontSize:16,fontWeight:700,cursor:'pointer',letterSpacing:'.05em',transition:'all .3s',fontFamily:'Nunito,sans-serif',backdropFilter:'blur(8px)', display:'inline-flex', alignItems: 'center', justifyContent:'center', gap:8}}>
-          {entered?'Setting sail…':<><img src={Anchor} alt="Anchor" style={{ width: '1.8em', height: '1.1em', verticalAlign: 'middle', flexShrink: 0 }} /> Begin the Journey</>}
+          {entered?t("Setting sail…"):<><img src={Anchor} alt="Anchor" style={{ width: '1.8em', height: '1.1em', verticalAlign: 'middle', flexShrink: 0 }} /> {t("Begin the Journey")}</>}
         </button>
       </div>
       <Waves h={130} c1="#C6DDED" c2="#9AB3CA" c3="#7a9ab0"/>
-      <div style={{position:'absolute',bottom:148,left:'50%',transform:'translateX(-50%)',color:'rgba(255,255,255,.55)',fontSize:11,letterSpacing:'.18em',textTransform:'uppercase',textAlign:'center',animation:'bob 2.5s ease-in-out infinite'}}>↓ scroll to sail on</div>
+      <div style={{position:'absolute',bottom:148,left:'50%',transform:'translateX(-50%)',color:'rgba(255,255,255,.55)',fontSize:11,letterSpacing:'.18em',textTransform:'uppercase',textAlign:'center',animation:'bob 2.5s ease-in-out infinite'}}>{t("↓ scroll to sail on")}</div>
     </section>
   )
 }
 
 function DestinationSection({ selected, onSelect }:{selected:string|null;onSelect:(id:string)=>void}) {
+  const { t } = useI18n()
   const [showMap, setShowMap] = useState(false)
   useEffect(()=>{ if(selected) setShowMap(true) },[selected])
   return (
@@ -1130,26 +1136,26 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
       <OceanLife/>
       <div style={{maxWidth:1000,margin:'0 auto',position:'relative',zIndex:2}}>
         <div style={{textAlign:'center',marginBottom:52}}>
-          <div style={{fontSize:12,letterSpacing:'.2em',color:'#4a6a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>Where are you sailing?</div>
-          <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>Choose your <em style={{fontStyle:'italic',color:'#5a7a92'}}>destination</em></h2>
-          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:460,margin:'0 auto'}}>Recovery is a journey toward somewhere beautiful. Pick the place that calls to your heart.</p>
+          <div style={{fontSize:12,letterSpacing:'.2em',color:'#4a6a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>{t("Where are you sailing?")}</div>
+          <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>{t("Choose your")} <em style={{fontStyle:'italic',color:'#5a7a92'}}>{t("destination")}</em></h2>
+          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:460,margin:'0 auto'}}>{t("Recovery is a journey toward somewhere beautiful. Pick the place that calls to your heart.")}</p>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(188px,1fr))',gap:14,marginBottom:48}}>
           {DESTINATIONS.map(d=>(
             <div key={d.id} className={`dest-card ${selected===d.id?'chosen':''}`} style={{background:selected===d.id?d.color:'rgba(248,243,238,.75)',borderRadius:20,padding:'22px 18px',textAlign:'center',backdropFilter:'blur(8px)'}} onClick={()=>onSelect(d.id)} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==='Enter')onSelect(d.id)}}>
               <div style={{fontSize:34,marginBottom:10}}>{d.flag}</div>
-              <div style={{fontWeight:700,fontSize:15,color:'#2c4a5c',marginBottom:6}}>{d.label}</div>
-              <div style={{fontSize:12,color:'#6a8a98',lineHeight:1.5}}>{d.tagline}</div>
+              <div style={{fontWeight:700,fontSize:15,color:'#2c4a5c',marginBottom:6}}>{t(d.label)}</div>
+              <div style={{fontSize:12,color:'#6a8a98',lineHeight:1.5}}>{t(d.tagline)}</div>
               {selected===d.id&&<div style={{marginTop:10,fontSize:11,fontWeight:700,color:d.accent,letterSpacing:'.1em',textTransform:'uppercase'}}>
               <img src={Anchor} alt="Anchor" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} />
-              Your destination</div>}
+              {t("Your destination")}</div>}
             </div>
           ))}
         </div>
         {showMap&&(
           <div className="animate-fade-in-up">
             <div style={{fontSize:12,fontWeight:700,color:'#4a6a82',letterSpacing:'.08em',textTransform:'uppercase',marginBottom:16,display:'flex',alignItems:'center',gap:8}}>
-              <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/> Your voyage map <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/>
+              <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/> {t("Your voyage map")} <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/>
             </div>
             <WorldMap destId={selected}/>
           </div>
@@ -1161,6 +1167,7 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
 }
 
 function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void}) {
+  const { t } = useI18n()
   const [completed, setCompleted] = useState<Set<string>>(new Set())
     useEffect(()=>{ if(savedCompleted) setCompleted(new Set(savedCompleted)) },[savedCompleted])
   // New quests every day. If the page is left open past midnight, switch to the new day's list.
@@ -1195,24 +1202,24 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
       {floats.map(f=><div key={f.id} className="xp-float" style={{left:f.x+8,top:f.y}}>+{f.val} XP</div>)}
       <div style={{maxWidth:960,margin:'0 auto',position:'relative',zIndex:2}}>
         <div style={{textAlign:'center',marginBottom:52}}>
-          <div style={{fontSize:12,letterSpacing:'.2em',color:'#5a7a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>Ship's quest log</div>
-          <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>Daily <em style={{fontStyle:'italic',color:'#7a6a5a'}}>Voyage Tasks</em></h2>
-          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 36px'}}>Small acts of self-care are how you sail towards your destination. Each task earns XP, which also become Gold Anchors to spend on your sailor and cabin.</p>
+          <div style={{fontSize:12,letterSpacing:'.2em',color:'#5a7a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>{t("Ship's quest log")}</div>
+          <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>{t("Daily")} <em style={{fontStyle:'italic',color:'#7a6a5a'}}>{t("Voyage Tasks")}</em></h2>
+          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 36px'}}>{t("Small acts of self-care are how you sail towards your destination. Each task earns XP, which also become Gold Anchors to spend on your sailor and cabin.")}</p>
           <div style={{maxWidth:480,margin:'0 auto',background:'rgba(255,255,255,.7)',borderRadius:20,padding:'20px 28px',border:'1.5px solid rgba(154,179,202,.25)',backdropFilter:'blur(8px)'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:22}}>{lv.icon}</span>
-                <div><div style={{fontWeight:800,fontSize:16,color:'#2c4a5c'}}>{lv.rank}</div><div style={{fontSize:12,color:'#6a8a98'}}>{totalXP} / {MAX_XP} XP · {totalXP} Gold Anchors 
+                <div><div style={{fontWeight:800,fontSize:16,color:'#2c4a5c'}}>{t(lv.rank)}</div><div style={{fontSize:12,color:'#6a8a98'}}>{t("{xp} / {max} XP · {gold} Gold Anchors",{xp:totalXP,max:MAX_XP,gold:totalXP})} 
                 <img src={AnchorImage} alt="Anchor Image" style={{ width: '20px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} /></div></div>
               </div>
-              <div style={{display:'flex',gap:8}}>{BADGES.map(b=><div key={b.id} title={b.label} style={{fontSize:20,opacity:earnedBadges.find(e=>e.id===b.id)?1:.22,transition:'opacity .4s'}}>{b.icon}</div>)}</div>
+              <div style={{display:'flex',gap:8}}>{BADGES.map(b=><div key={b.id} title={t(b.label)} style={{fontSize:20,opacity:earnedBadges.find(e=>e.id===b.id)?1:.22,transition:'opacity .4s'}}>{b.icon}</div>)}</div>
             </div>
             <div style={{height:10,borderRadius:10,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
               <div style={{height:'100%',borderRadius:10,background:'linear-gradient(90deg,#9AB3CA,#7a9ab0)',width:`${pct}%`,transition:'width .6s cubic-bezier(.4,0,.2,1)'}}/>
             </div>
             {allDone&&<div style={{marginTop:12,fontSize:13,fontWeight:700,color:'#5a7a82',textAlign:'center'}}>
             <img src={Party} alt="Party Icon" style={{ width: '16px', height: '16px', verticalAlign: 'middle', marginRight: '4px' }} />
-             All quests complete — you are incredible!</div>}
+             {t("All quests complete — you are incredible!")}</div>}
           </div>
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:20}}>
@@ -1220,7 +1227,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
             <div key={cat.id} style={{background:'rgba(255,255,255,.72)',borderRadius:20,padding:'24px',border:`1.5px solid ${cat.color}28`,backdropFilter:'blur(8px)'}}>
               <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:6}}>
                 <span style={{fontSize:22}}>{cat.icon}</span>
-                <div><div style={{fontWeight:800,fontSize:15,color:'#2c4a5c'}}>{cat.label}</div><div style={{fontSize:12,color:'#6a8a98'}}>{cat.desc}</div></div>
+                <div><div style={{fontWeight:800,fontSize:15,color:'#2c4a5c'}}>{t(cat.label)}</div><div style={{fontSize:12,color:'#6a8a98'}}>{t(cat.desc)}</div></div>
               </div>
               <div style={{height:2,borderRadius:2,background:`${cat.color}22`,marginBottom:16}}>
                 <div style={{height:'100%',borderRadius:2,background:cat.color,width:`${cat.quests.filter(q=>completed.has(q.id)).length/cat.quests.length*100}%`,transition:'width .5s ease'}}/>
@@ -1234,8 +1241,8 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
                         {done&&<span className="animate-check-pop" style={{color:'white',fontSize:14,fontWeight:700}}>✓</span>}
                       </div>
                       <div style={{flex:1}}>
-                        <div style={{fontSize:14,color:done?'#8a9a98':'#2c4a5c',textDecoration:done?'line-through':'none',lineHeight:1.5,transition:'color .3s'}}>{q.text}</div>
-                        <div style={{fontSize:11,fontWeight:700,color:done?'#9aaab0':cat.color,marginTop:3}}>+{q.xp} XP · +{q.xp} Gold Anchors 
+                        <div style={{fontSize:14,color:done?'#8a9a98':'#2c4a5c',textDecoration:done?'line-through':'none',lineHeight:1.5,transition:'color .3s'}}>{t(q.text)}</div>
+                        <div style={{fontSize:11,fontWeight:700,color:done?'#9aaab0':cat.color,marginTop:3}}>{t("+{xp} XP · +{xp} Gold Anchors",{xp:q.xp})} 
                         <img src={AnchorImage} alt="Anchor Image" style={{ width: '24px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
                         </div>
                       </div>
@@ -1249,11 +1256,11 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
         <div style={{marginTop:28,background:'linear-gradient(135deg,rgba(196,154,66,.1),rgba(154,112,60,.07))',border:'1.5px solid rgba(196,154,66,.3)',borderRadius:20,padding:'24px 28px',display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
           <span style={{fontSize:36}}><img src={Lightning} alt="Lightning Icon" style={{ width: '36px', height: '36px', verticalAlign: 'middle' }} /></span>
           <div style={{flex:1}}>
-            <div style={{fontWeight:800,fontSize:16,color:'#5a4020',marginBottom:4}}>EPIC QUEST — Bonus Challenge</div>
-            <div style={{fontSize:15,color:'#2c4a5c',marginBottom:6}}>Write one sentence about what "shore" means to you and save it somewhere you will see every day.</div>
-            <div style={{fontSize:12,color:'#c49a42',fontWeight:700}}>+50 XP · +50 Gold Anchors 
+            <div style={{fontWeight:800,fontSize:16,color:'#5a4020',marginBottom:4}}>{t("EPIC QUEST — Bonus Challenge")}</div>
+            <div style={{fontSize:15,color:'#2c4a5c',marginBottom:6}}>{t('Write one sentence about what "shore" means to you and save it somewhere you will see every day.')}</div>
+            <div style={{fontSize:12,color:'#c49a42',fontWeight:700}}>{t("+50 XP · +50 Gold Anchors")} 
             <img src={AnchorImage} alt="Anchor Image" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
-             · Rare achievement</div>
+             {t("· Rare achievement")}</div>
           </div>
           <span style={{fontSize:28}}><img src={Trophy} alt="Trophy" style={{ width: '28px', height: '28px', verticalAlign: 'middle' }} /></span>
         </div>
@@ -1264,17 +1271,18 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
 }
 
 function StormSection() {
+  const { t } = useI18n()
   return (
     <section id="storm" style={{position:'relative',background:'linear-gradient(180deg,#dbded9 0%,#C6DDED 45%,#daded9 100%)',padding:'120px 24px',overflow:'hidden'}}>
       <RainDrops n={22}/>
       <div style={{position:'absolute',right:'8%',top:'18%',opacity:.3}}><ShipSVG stormy size={100}/></div>
       <div style={{maxWidth:820,margin:'0 auto',position:'relative',zIndex:2}}>
-        <div style={{fontSize:12,letterSpacing:'.2em',color:'#9AB3CA',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Your voyage ahead</div>
+        <div style={{fontSize:12,letterSpacing:'.2em',color:'#9AB3CA',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>{t("Your voyage ahead")}</div>
         <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,52px)',fontWeight:400,color:'#5a7a92',marginBottom:24,lineHeight:1.2}}>
-          Your dream shore is waiting.<br/><em style={{fontStyle:'italic',color:'#fff'}}>And it's a beautiful place to be.</em>
+          {t("Your dream shore is waiting.")}<br/><em style={{fontStyle:'italic',color:'#fff'}}>{t("And it's a beautiful place to be.")}</em>
         </h2>
         <p style={{fontSize:17,color:'#5a7a92',lineHeight:1.8,marginBottom:56,maxWidth:600}}>
-          Anorexia is not a choice or a phase. It is a serious illness that affects your mind, body, and spirit. If you are struggling, you are not alone, and you are not broken. You are sailing through one of the hardest storms there is.
+          {t("Anorexia is not a choice or a phase. It is a serious illness that affects your mind, body, and spirit. If you are struggling, you are not alone, and you are not broken. You are sailing through one of the hardest storms there is.")}
         </p>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:20,marginBottom:52}}>
 
@@ -1284,13 +1292,13 @@ function StormSection() {
               
               
               <div style={{fontSize:28,marginBottom:10}}>{it.icon}</div>
-              <div className="font-display" style={{fontSize:28,fontWeight:600,color:'#f0d080',marginBottom:8}}>{it.stat}</div>
-              <div style={{fontSize:14,color:'#9AB3CA',lineHeight:1.5}}>{it.label}</div>
+              <div className="font-display" style={{fontSize:28,fontWeight:600,color:'#f0d080',marginBottom:8}}>{t(it.stat)}</div>
+              <div style={{fontSize:14,color:'#9AB3CA',lineHeight:1.5}}>{t(it.label)}</div>
             </div>
           ))}
         </div>
         <div style={{background:'rgba(198,221,237,.07)',border:'1px solid rgba(198,221,237,.18)',borderLeft:'3px solid #9AB3CA',borderRadius:16,padding:'22px 28px'}}>
-          <p style={{fontSize:16,color:'#5a7a92',lineHeight:1.85,margin:0,fontStyle:'italic'}}>You do not have to have everything figured out to ask for help. You just have to take the next small step. There are people waiting to sail alongside you. ❤︎</p>
+          <p style={{fontSize:16,color:'#5a7a92',lineHeight:1.85,margin:0,fontStyle:'italic'}}>{t("You do not have to have everything figured out to ask for help. You just have to take the next small step. There are people waiting to sail alongside you. ❤︎")}</p>
         </div>
       </div>
       <Waves h={110} c1="#3a6272" c2="#4a7282" c3="#5a8292"/>
@@ -1299,6 +1307,7 @@ function StormSection() {
 }
 
 function BottlesSection({ user, onLogin }:{user:{id:string;sailor:string}|null;onLogin:()=>void}) {
+  const { t } = useI18n()
   const userLetters = useUserLetters()
   const [openLetter, setOpenLetter] = useState<typeof LETTERS[0]|null>(null)
   const [poppingId, setPoppingId] = useState<number|null>(null)
@@ -1312,9 +1321,9 @@ function BottlesSection({ user, onLogin }:{user:{id:string;sailor:string}|null;o
       <OceanLife/>
       <div style={{maxWidth:1100,margin:'0 auto',position:'relative',zIndex:2}}>
         <div style={{textAlign:'center',marginBottom:60}}>
-          <div style={{fontSize:12,letterSpacing:'.2em',color:'#4a6a82',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Messages from survivors</div>
-          <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:18,lineHeight:1.2}}>Letters in <em style={{fontStyle:'italic',color:'#5a7a92'}}>Bottles</em></h2>
-          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:500,margin:'0 auto'}}>Survivors have sealed their stories in these bottles. Click a bottle, watch the cork fly, and let the letter unfurl.</p>
+          <div style={{fontSize:12,letterSpacing:'.2em',color:'#4a6a82',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>{t("Messages from survivors")}</div>
+          <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:18,lineHeight:1.2}}>{t("Letters in")} <em style={{fontStyle:'italic',color:'#5a7a92'}}>{t("Bottles")}</em></h2>
+          <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:500,margin:'0 auto'}}>{t("Survivors have sealed their stories in these bottles. Click a bottle, watch the cork fly, and let the letter unfurl.")}</p>
         </div>
                 <div style={{overflowX:'auto',paddingTop:160,marginTop:-160,paddingBottom:30}}>
           <div style={{display:'flex',gap:32,width:'max-content',margin:'0 auto',padding:'0 8px'}}>
@@ -1403,6 +1412,7 @@ function CrewChatSection({ myName, myColor }:{myName:string;myColor:string}) {
 // ── Lighthouse (redesigned with tabs) ────────────────────────────────────────
 
 function LighthouseSection() {
+  const { t, lang } = useI18n()
   const [tab, setTab] = useState<'helplines'|'learn'|'quiz'|'resources'>('helplines')
   const [expanded, setExpanded] = useState<string|null>(null)
   const [activeRes, setActiveRes] = useState<number|null>(null)
@@ -1413,16 +1423,16 @@ function LighthouseSection() {
   const allAnswered = Object.keys(answers).length === QUIZ_QUESTIONS.length
 
   const tabs: {id:'helplines'|'learn'|'quiz'|'resources'; label:string; icon:React.ReactNode}[] = [
-    {id:'helplines', label:'Get Help Now', icon: <img src={SOS} alt="SOS" style={{ width: '30px', height: '16px', verticalAlign: 'middle' }} />},
-    {id:'learn',     label:'Learn',        icon: <img src={BookStack} alt='Book Stack' style={{ width: '16px', height: '16px', verticalAlign: 'middle'}} />},
-    {id:'quiz',      label:'Self-Check',   icon: <img src={Thought} alt='Thought Bubble' style={{ width: '25px', height: '16px', verticalAlign: 'middle'}} />},
-    {id:'resources', label:'Resources',    icon: <img src={Flashlight} alt='Flashlight' style={{ width: '25px', height: '16px', verticalAlign: 'middle'}} />},
+    {id:'helplines', label:t('Get Help Now'), icon: <img src={SOS} alt="SOS" style={{ width: '30px', height: '16px', verticalAlign: 'middle' }} />},
+    {id:'learn',     label:t('Learn'),        icon: <img src={BookStack} alt='Book Stack' style={{ width: '16px', height: '16px', verticalAlign: 'middle'}} />},
+    {id:'quiz',      label:t('Self-Check'),   icon: <img src={Thought} alt='Thought Bubble' style={{ width: '25px', height: '16px', verticalAlign: 'middle'}} />},
+    {id:'resources', label:t('Resources'),    icon: <img src={Flashlight} alt='Flashlight' style={{ width: '25px', height: '16px', verticalAlign: 'middle'}} />},
   ]
 
   function quizResult() {
-    if(quizScore<=8)  return { level:'Low',      color:'#6a8a78', bg:'rgba(106,138,120,.1)', border:'rgba(106,138,120,.3)', message:"It looks like food and body image aren't causing you a lot of distress right now. Great job checking in with yourself, that self-awareness matters.", cta:'Continue to explore the site and build your crew!' }
-    if(quizScore<=18) return { level:'Moderate',  color:'#8a7a50', bg:'rgba(138,122,80,.08)', border:'rgba(138,122,80,.28)', message:"Some of these patterns are worth paying attention to. You deserve support. It might really help to talk with a trusted adult, school counselor, or one of the helplines on this page.", cta:'Take a look at the Helplines tab above.' }
-    return               { level:'High',         color:'#9a6060', bg:'rgba(154,96,96,.08)', border:'rgba(154,96,96,.25)', message:"These patterns suggest you might benefit from professional support. Please know this is not a diagnosis, but reaching out to a trusted adult or calling a helpline today could make a real difference.", cta:'Please see the Helplines tab above. Help is available right now.' }
+    if(quizScore<=8)  return { level:'Low Concern',      color:'#6a8a78', bg:'rgba(106,138,120,.1)', border:'rgba(106,138,120,.3)', message:t("It looks like food and body image aren't causing you a lot of distress right now. Great job checking in with yourself, that self-awareness matters."), cta:t('Continue to explore the site and build your crew!') }
+    if(quizScore<=18) return { level:'Moderate Concern',  color:'#8a7a50', bg:'rgba(138,122,80,.08)', border:'rgba(138,122,80,.28)', message:t("Some of these patterns are worth paying attention to. You deserve support. It might really help to talk with a trusted adult, school counselor, or one of the helplines on this page."), cta:t('Take a look at the Helplines tab above.') }
+    return               { level:'High Concern',         color:'#9a6060', bg:'rgba(154,96,96,.08)', border:'rgba(154,96,96,.25)', message:t("These patterns suggest you might benefit from professional support. Please know this is not a diagnosis, but reaching out to a trusted adult or calling a helpline today could make a real difference."), cta:t('Please see the Helplines tab above. Help is available right now.') }
   }
 
   return (
@@ -1432,22 +1442,22 @@ function LighthouseSection() {
         {/* Header */}
         <div style={{display:'flex',alignItems:'flex-start',gap:48,marginBottom:52,flexWrap:'wrap'}}>
           <div style={{flex:'1 1 300px'}}>
-            <div style={{fontSize:12,letterSpacing:'.2em',color:'#8a7050',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>Your guiding light</div>
-            <h2 className="font-display" style={{fontSize:'clamp(28px,4vw,46px)',fontWeight:400,color:'#2c4a5c',marginBottom:20,lineHeight:1.2}}>The <em style={{fontStyle:'italic',color:'#c49a42'}}>Lighthouse</em></h2>
-            <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.8,maxWidth:440}}>Learn about anorexia from trusted medical sources, check in with yourself through a gentle self-assessment, and find immediate help if you need it.</p>
+            <div style={{fontSize:12,letterSpacing:'.2em',color:'#8a7050',textTransform:'uppercase',fontWeight:700,marginBottom:16}}>{t("Your guiding light")}</div>
+            <h2 className="font-display" style={{fontSize:'clamp(28px,4vw,46px)',fontWeight:400,color:'#2c4a5c',marginBottom:20,lineHeight:1.2}}><em style={{fontStyle:'italic',color:'#c49a42'}}>{t("The Lighthouse")}</em></h2>
+            <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.8,maxWidth:440}}>{t("Learn about anorexia from trusted medical sources, check in with yourself through a gentle self-assessment, and find immediate help if you need it.")}</p>
           </div>
           <div style={{display:'flex',alignItems:'flex-end',gap:20}}>
             <LighthouseSVG/>
-            <p style={{fontSize:14,color:'#7a8a7a',fontStyle:'italic',lineHeight:1.65,maxWidth:180,paddingBottom:24}}>"A lighthouse does not chase ships. It stands steady, casting light so you can find your own way."</p>
+            <p style={{fontSize:14,color:'#7a8a7a',fontStyle:'italic',lineHeight:1.65,maxWidth:180,paddingBottom:24}}>{t("\"A lighthouse does not chase ships. It stands steady, casting light so you can find your own way.\"")}</p>
           </div>
         </div>
 
         {/* Tab nav */}
         <div style={{display:'flex',gap:8,marginBottom:32,flexWrap:'wrap'}}>
-          {tabs.map(t=>(
-            <button key={t.id} onClick={()=>setTab(t.id)} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 22px',borderRadius:50,fontWeight:700,fontSize:14,border:`1.5px solid ${tab===t.id?'#9AB3CA':'rgba(154,179,202,.25)'}`,background:tab===t.id?'rgba(154,179,202,.22)':'rgba(255,255,255,.6)',color:tab===t.id?'#2c4a5c':'#6a8a98',cursor:'pointer',transition:'all .2s',fontFamily:'Nunito,sans-serif',backdropFilter:'blur(8px)'}}>
-              <span style={{fontSize:16}}>{t.icon}</span>{t.label}
-              {t.id==='helplines'&&<span style={{background:'#c84040',color:'white',borderRadius:50,padding:'1px 7px',fontSize:10,fontWeight:800}}>URGENT</span>}
+          {tabs.map(tb=>(
+            <button key={tb.id} onClick={()=>setTab(tb.id)} style={{display:'flex',alignItems:'center',gap:8,padding:'10px 22px',borderRadius:50,fontWeight:700,fontSize:14,border:`1.5px solid ${tab===tb.id?'#9AB3CA':'rgba(154,179,202,.25)'}`,background:tab===tb.id?'rgba(154,179,202,.22)':'rgba(255,255,255,.6)',color:tab===tb.id?'#2c4a5c':'#6a8a98',cursor:'pointer',transition:'all .2s',fontFamily:'Nunito,sans-serif',backdropFilter:'blur(8px)'}}>
+              <span style={{fontSize:16}}>{tb.icon}</span>{tb.label}
+              {tb.id==='helplines'&&<span style={{background:'#c84040',color:'white',borderRadius:50,padding:'1px 7px',fontSize:10,fontWeight:800}}>{t("URGENT")}</span>}
             </button>
           ))}
         </div>
@@ -1459,15 +1469,21 @@ function LighthouseSection() {
             <div style={{background:'rgba(200,64,64,.08)',border:'2px solid rgba(200,64,64,.3)',borderRadius:20,padding:'20px 28px',marginBottom:24,display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
               <span style={{fontSize:36}}><img src={Siren} alt="Siren" style={{ width: '60px', height: '36px', verticalAlign: 'middle' }} /></span>
               <div style={{flex:1}}>
-                <div style={{fontWeight:800,fontSize:17,color:'#c84040',marginBottom:6}}>In a medical emergency, call 911 immediately</div>
-                <div style={{fontSize:14,color:'#7a5050',lineHeight:1.6}}>If you or someone you know is in immediate physical danger — including medical complications from an eating disorder — do not wait. Call emergency services right away.</div>
+                <div style={{fontWeight:800,fontSize:17,color:'#c84040',marginBottom:6}}>{t("In a medical emergency, call 911 immediately")}</div>
+                <div style={{fontSize:14,color:'#7a5050',lineHeight:1.6}}>{t("If you or someone you know is in immediate physical danger — including medical complications from an eating disorder — do not wait. Call emergency services right away.")}</div>
               </div>
-              <a href="tel:911" style={{background:'#c84040',color:'white',padding:'12px 28px',borderRadius:50,textDecoration:'none',fontWeight:800,fontSize:16,flexShrink:0,letterSpacing:'.05em'}}>Call 911</a>
+              <a href="tel:911" style={{background:'#c84040',color:'white',padding:'12px 28px',borderRadius:50,textDecoration:'none',fontWeight:800,fontSize:16,flexShrink:0,letterSpacing:'.05em'}}>{t("Call 911")}</a>
             </div>
+            {lang!=='en'&&(
+              <div style={{background:'rgba(255,255,255,.85)',border:'1.5px solid rgba(196,154,66,.35)',borderRadius:20,padding:'20px 24px',marginBottom:16}}>
+                <div style={{fontWeight:800,fontSize:15,color:'#2c4a5c',marginBottom:8}}>{t("Help in your language")}</div>
+                {HELPLINES[lang].map(h=><div key={h.name} style={{fontSize:14,color:'#3a5a72',lineHeight:1.7}}><strong>{h.name}</strong>: {h.how}</div>)}
+              </div>
+            )}
             {/* Helplines */}
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:16}}>
               {[
-                {name:'NEDA Helpline',        sub:'Eating Disorders',   phone:'1-800-931-2237',       text:'NEDA to 741741',       icon: <img src={Phone} alt="Phone" style={{ width: '40px', height: '20px', verticalAlign: 'middle'}} />, color:'#7a9ab0', desc:"Available Mon–Thu 11am–9pm, Fri 11am–5pm ET. Chat also available at nationaleatingdisorders.org"},
+                {name:'Alliance for Eating Disorders', sub:'Eating Disorders',   phone:'1-866-662-1235',       text:null,       icon: <img src={Phone} alt="Phone" style={{ width: '40px', height: '20px', verticalAlign: 'middle'}} />, color:'#7a9ab0', desc:"Eating disorder helpline for support and referrals. Mon–Fri 9am–7pm ET."},
                 {name:'Crisis Text Line',     sub:'Any Crisis',         phone:null,                   text:'HOME to 741741',       icon: <img src={ChatBubble} alt="Chat Bubble" style={{ width:  '40px', height: '20px', verticalAlign: 'middle'}} />, color:'#6a8a9a', desc:"Free, 24/7, confidential text support for any type of crisis — staffed by trained counselors."},
                 {name:'Teen Line',            sub:'Teens for Teens',    phone:'1-800-852-8336',       text:'TEEN to 839863',       icon: <img src={Floaty} alt="Floaty" style={{ width:  '40px', height: '20px', verticalAlign: 'middle'}} />,  color:'#8a7a9a', desc:"Staffed by trained teen volunteers. Open evenings 6–10 PM PT. You will speak with someone your age."},
                 {name:'NAMI HelpLine',        sub:'Mental Health',      phone:'1-800-950-6264',       text:'NAMI to 741741',       icon: <img src={SeaShell} alt="Seashell" style={{ width:'40px', height: '20px', verticalAlign: 'middle'}} />,  color:'#8a8a7a', desc:"Mon–Fri 10am–10pm ET. Free information, referrals, and support for mental health conditions."},
@@ -1477,18 +1493,18 @@ function LighthouseSection() {
                 <div key={i} style={{background:'rgba(255,255,255,.75)',border:`1.5px solid ${h.color}30`,borderRadius:20,padding:'22px 24px',backdropFilter:'blur(8px)'}}>
                   <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:12}}>
                     <div style={{width:44,height:44,borderRadius:12,background:`${h.color}20`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{h.icon}</div>
-                    <div><div style={{fontWeight:800,fontSize:15,color:'#2c4a5c'}}>{h.name}</div><div style={{fontSize:12,color:h.color,fontWeight:600}}>{h.sub}</div></div>
+                    <div><div style={{fontWeight:800,fontSize:15,color:'#2c4a5c'}}>{h.name}</div><div style={{fontSize:12,color:h.color,fontWeight:600}}>{t(h.sub)}</div></div>
                   </div>
-                  <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.55,marginBottom:14}}>{h.desc}</p>
+                  <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.55,marginBottom:14}}>{t(h.desc)}</p>
                   <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                     {h.phone&&<a href={`tel:${h.phone.replace(/\D/g,'')}`} style={{display:'inline-flex',alignItems:'center',gap:6,background:`${h.color}18`,color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:700,textDecoration:'none',border:`1px solid ${h.color}35`}}><img src={OldPhone} alt="Phone Icon" style={{ width: '36px', height: '20px', verticalAlign: 'middle', flexShrink: 0, }} /> {h.phone}</a>}
-                    {h.text&&<div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(248,243,238,.8)',color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:600,border:'1px solid rgba(154,179,202,.2)'}}><img src={Text} alt="Text" style={{ width: '36px', height: '20px', verticalAlign: 'middle', flexShrink: 0, }} /> Text: {h.text}</div>}
+                    {h.text&&<div style={{display:'inline-flex',alignItems:'center',gap:6,background:'rgba(248,243,238,.8)',color:'#2c4a5c',padding:'8px 16px',borderRadius:50,fontSize:13,fontWeight:600,border:'1px solid rgba(154,179,202,.2)'}}><img src={Text} alt="Text" style={{ width: '36px', height: '20px', verticalAlign: 'middle', flexShrink: 0, }} /> {t("Text:")} {h.text}</div>}
                   </div>
                 </div>
               ))}
             </div>
             <div style={{marginTop:24,background:'rgba(198,221,237,.12)',border:'1px solid rgba(154,179,202,.25)',borderRadius:16,padding:'18px 24px',fontSize:14,color:'#5a7a82',lineHeight:1.65,textAlign:'center'}}>
-              <strong>You deserve support right now — not later, not when you are "sick enough."</strong> Reaching out is brave. Every single helpline above is free and confidential.
+              <strong>{t('You deserve support right now — not later, not when you are "sick enough."')}</strong> {t("Reaching out is brave. Every single helpline above is free and confidential.")}
             </div>
           </div>
         )}
@@ -1498,7 +1514,7 @@ function LighthouseSection() {
           <div>
             <div style={{background:'rgba(255,255,255,.65)',border:'1px solid rgba(154,179,202,.2)',borderRadius:16,padding:'14px 20px',marginBottom:28,display:'flex',gap:10,alignItems:'center'}}>
               <span style={{fontSize:18}}><img src={Info} alt="Info Icon" style={{ width: '35px', height: '18px', verticalAlign: 'middle' }} /></span>
-              <div style={{fontSize:14,color:'#5a7a82',lineHeight:1.55}}>Information sourced from the <strong>Mayo Clinic</strong>, <strong>National Eating Disorders Association (NEDA)</strong>, and the <strong>American Journal of Psychiatry</strong>. This is educational, not medical advice.</div>
+              <div style={{fontSize:14,color:'#5a7a82',lineHeight:1.55}}>{t("Information sourced from the")} <strong>Mayo Clinic</strong>, <strong>National Eating Disorders Association (NEDA)</strong>, {t("and the")} <strong>American Journal of Psychiatry</strong>. {t("This is educational, not medical advice. The medical information on this tab is in English.")}</div>
             </div>
             <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(340px,1fr))',gap:16}}>
               {ANOREXIA_INFO.map(info=>(
@@ -1508,7 +1524,7 @@ function LighthouseSection() {
                       <div style={{width:42,height:42,borderRadius:12,background:`${info.color}18`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{info.icon}</div>
                       <div style={{flex:1}}>
                         <div style={{fontWeight:800,fontSize:15,color:'#2c4a5c',marginBottom:4}}>{info.title}</div>
-                        <div style={{fontSize:11,color:info.color,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase'}}>Source: {info.source}</div>
+                        <div style={{fontSize:11,color:info.color,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase'}}>{t("Source:")} {info.source}</div>
                       </div>
                       <div style={{color:'#9AB3CA',fontSize:18,transition:'transform .3s',transform:expanded===info.id?'rotate(90deg)':'none',flexShrink:0}}>›</div>
                     </div>
@@ -1539,8 +1555,8 @@ function LighthouseSection() {
             <div style={{background:'rgba(196,154,66,.08)',border:'1.5px solid rgba(196,154,66,.3)',borderRadius:16,padding:'18px 24px',marginBottom:32,display:'flex',gap:12,alignItems:'flex-start'}}>
               <span style={{fontSize:22,flexShrink:0}}><img src={Thought} alt="Thought Bubble" style={{ width: '35px', height: '22px', flexShrink: 0 }} /></span>
               <div>
-                <div style={{fontWeight:800,fontSize:14,color:'#8a6020',marginBottom:6}}>This is a self-reflection tool, not a medical diagnosis</div>
-                <div style={{fontSize:13,color:'#7a6a50',lineHeight:1.65}}>This brief check-in is meant to help you notice patterns in your own experience. It cannot diagnose any condition. If you are concerned about your health, please reach out to a doctor, counselor, or one of the helplines on this page.</div>
+                <div style={{fontWeight:800,fontSize:14,color:'#8a6020',marginBottom:6}}>{t("This is a self-reflection tool, not a medical diagnosis")}</div>
+                <div style={{fontSize:13,color:'#7a6a50',lineHeight:1.65}}>{t("This brief check-in is meant to help you notice patterns in your own experience. It cannot diagnose any condition. If you are concerned about your health, please reach out to a doctor, counselor, or one of the helplines on this page.")}</div>
               </div>
             </div>
             {!quizDone ? (
@@ -1550,12 +1566,12 @@ function LighthouseSection() {
                     <div key={qi} style={{background:'rgba(255,255,255,.72)',borderRadius:18,padding:'22px 24px',border:'1.5px solid rgba(154,179,202,.2)',backdropFilter:'blur(8px)'}}>
                       <div style={{fontSize:15,color:'#2c4a5c',fontWeight:600,marginBottom:16,lineHeight:1.5}}>
                         <span style={{fontSize:12,fontWeight:800,color:'#9AB3CA',marginRight:8}}>{qi+1}/{QUIZ_QUESTIONS.length}</span>
-                        {q}
+                        {t(q)}
                       </div>
                       <div style={{display:'flex',gap:8,flexWrap:'wrap'}}>
                         {QUIZ_LABELS.map((label,li)=>(
                           <button key={li} onClick={()=>setAnswers(a=>({...a,[qi]:li}))} style={{flex:'1 1 80px',padding:'8px 10px',borderRadius:12,fontSize:12,fontWeight:600,border:`1.5px solid ${answers[qi]===li?'#9AB3CA':'rgba(154,179,202,.22)'}`,background:answers[qi]===li?'rgba(154,179,202,.22)':'rgba(255,255,255,.7)',color:answers[qi]===li?'#2c4a5c':'#6a8a98',cursor:'pointer',transition:'all .2s',fontFamily:'Nunito,sans-serif'}}>
-                            {label}
+                            {t(label)}
                           </button>
                         ))}
                       </div>
@@ -1565,15 +1581,15 @@ function LighthouseSection() {
                 {/* Progress */}
                 <div style={{marginBottom:20}}>
                   <div style={{display:'flex',justifyContent:'space-between',fontSize:12,color:'#8a9aa8',marginBottom:8}}>
-                    <span>{Object.keys(answers).length} of {QUIZ_QUESTIONS.length} answered</span>
-                    <span>{allAnswered?'Ready to see results!':'Answer all questions to continue'}</span>
+                    <span>{t("{n} of {total} answered",{n:Object.keys(answers).length,total:QUIZ_QUESTIONS.length})}</span>
+                    <span>{allAnswered?t('Ready to see results!'):t('Answer all questions to continue')}</span>
                   </div>
                   <div style={{height:6,borderRadius:6,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
                     <div style={{height:'100%',borderRadius:6,background:'linear-gradient(90deg,#9AB3CA,#7a9ab0)',width:`${(Object.keys(answers).length/QUIZ_QUESTIONS.length)*100}%`,transition:'width .4s ease'}}/>
                   </div>
                 </div>
                 <button onClick={()=>{ if(allAnswered) setQuizDone(true) }} disabled={!allAnswered} style={{width:'100%',padding:'14px',borderRadius:50,fontWeight:800,fontSize:15,border:'none',background:allAnswered?'linear-gradient(135deg,#9AB3CA,#7a9ab0)':'rgba(154,179,202,.2)',color:allAnswered?'white':'#9aaab0',cursor:allAnswered?'pointer':'default',fontFamily:'Nunito,sans-serif',transition:'all .3s',letterSpacing:'.04em'}}>
-                  See my results
+                  {t("See my results")}
                 </button>
               </>
             ) : (
@@ -1583,17 +1599,17 @@ function LighthouseSection() {
                   return (
                     <div>
                       <div style={{background:r.bg,border:`1.5px solid ${r.border}`,borderRadius:20,padding:'28px 32px',marginBottom:24,textAlign:'center'}}>
-                        <div style={{fontSize:12,fontWeight:800,color:r.color,letterSpacing:'.15em',textTransform:'uppercase',marginBottom:12}}>Your result</div>
-                        <div className="font-display" style={{fontSize:40,fontWeight:400,color:r.color,marginBottom:16}}>{r.level} Concern</div>
+                        <div style={{fontSize:12,fontWeight:800,color:r.color,letterSpacing:'.15em',textTransform:'uppercase',marginBottom:12}}>{t("Your result")}</div>
+                        <div className="font-display" style={{fontSize:40,fontWeight:400,color:r.color,marginBottom:16}}>{t(r.level)}</div>
                         <p style={{fontSize:15,color:'#3a5a72',lineHeight:1.75,maxWidth:520,margin:'0 auto 16px'}}>{r.message}</p>
                         <div style={{fontSize:14,fontWeight:700,color:r.color}}>{r.cta}</div>
                       </div>
                       <div style={{background:'rgba(255,255,255,.65)',borderRadius:16,padding:'18px 22px',border:'1px solid rgba(154,179,202,.2)',marginBottom:20,fontSize:13,color:'#5a7a82',lineHeight:1.65}}>
-                        <strong>Reminder:</strong> This check-in cannot diagnose any eating disorder or mental health condition. It is simply a way to notice patterns. Whatever your result, please speak with a healthcare professional if you have any concerns about your health.
+                        <strong>{t("Reminder:")}</strong> {t("This check-in cannot diagnose any eating disorder or mental health condition. It is simply a way to notice patterns. Whatever your result, please speak with a healthcare professional if you have any concerns about your health.")}
                       </div>
                       <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
-                        <button onClick={()=>{ setAnswers({}); setQuizDone(false) }} style={{flex:1,padding:'12px',borderRadius:50,fontWeight:700,fontSize:14,border:'1.5px solid rgba(154,179,202,.3)',background:'rgba(255,255,255,.7)',color:'#4a6a82',cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>Retake quiz</button>
-                        <button onClick={()=>setTab('helplines')} style={{flex:2,padding:'12px',borderRadius:50,fontWeight:700,fontSize:14,border:'none',background:'linear-gradient(135deg,#9AB3CA,#7a9ab0)',color:'white',cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>See helplines & resources</button>
+                        <button onClick={()=>{ setAnswers({}); setQuizDone(false) }} style={{flex:1,padding:'12px',borderRadius:50,fontWeight:700,fontSize:14,border:'1.5px solid rgba(154,179,202,.3)',background:'rgba(255,255,255,.7)',color:'#4a6a82',cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>{t("Retake quiz")}</button>
+                        <button onClick={()=>setTab('helplines')} style={{flex:2,padding:'12px',borderRadius:50,fontWeight:700,fontSize:14,border:'none',background:'linear-gradient(135deg,#9AB3CA,#7a9ab0)',color:'white',cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>{t("See helplines & resources")}</button>
                       </div>
                     </div>
                   )
@@ -1611,13 +1627,13 @@ function LighthouseSection() {
                 <div key={i} className="res-card" style={{background:activeRes===i?'rgba(198,221,237,.45)':'rgba(255,255,255,.6)',borderRadius:14,padding:'16px 20px',cursor:'pointer',backdropFilter:'blur(8px)'}} onClick={()=>setActiveRes(activeRes===i?null:i)}>
                   <div style={{display:'flex',alignItems:'center',gap:12}}>
                     <div style={{fontSize:22,flexShrink:0}}>{r.icon}</div>
-                    <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:'#2c4a5c',marginBottom:3}}>{r.name}</div><div style={{fontSize:13,color:'#6a8a98',lineHeight:1.5}}>{r.desc}</div></div>
+                    <div style={{flex:1}}><div style={{fontSize:15,fontWeight:700,color:'#2c4a5c',marginBottom:3}}>{r.name}</div><div style={{fontSize:13,color:'#6a8a98',lineHeight:1.5}}>{t(r.desc)}</div></div>
                     <div style={{color:'#9AB3CA',fontSize:18,transition:'transform .3s',transform:activeRes===i?'rotate(90deg)':'none'}}>›</div>
                   </div>
                   {activeRes===i&&(
                     <div style={{marginTop:14,paddingTop:14,borderTop:'1px solid rgba(154,179,202,.18)'}}>
-                      <div style={{fontSize:14,color:'#5a7a82',fontWeight:600,marginBottom:10}}>{r.contact}</div>
-                      <a href={r.link} target="_blank" rel="noopener noreferrer" style={{display:'inline-block',background:'rgba(154,179,202,.18)',color:'#3a5a72',padding:'8px 20px',borderRadius:50,fontSize:13,fontWeight:600,textDecoration:'none',border:'1px solid rgba(154,179,202,.3)'}} onClick={e=>e.stopPropagation()}>Visit resource →</a>
+                      <div style={{fontSize:14,color:'#5a7a82',fontWeight:600,marginBottom:10}}>{t(r.contact)}</div>
+                      <a href={r.link} target="_blank" rel="noopener noreferrer" style={{display:'inline-block',background:'rgba(154,179,202,.18)',color:'#3a5a72',padding:'8px 20px',borderRadius:50,fontSize:13,fontWeight:600,textDecoration:'none',border:'1px solid rgba(154,179,202,.3)'}} onClick={e=>e.stopPropagation()}>{t("Visit resource →")}</a>
                     </div>
                   )}
                 </div>
@@ -1625,7 +1641,7 @@ function LighthouseSection() {
             </div>
             <div style={{marginTop:18,background:'rgba(200,64,64,.06)',border:'1px solid rgba(200,64,64,.22)',borderRadius:14,padding:'16px 20px',display:'flex',gap:12,alignItems:'flex-start',maxWidth:760}}>
               <span style={{fontSize:18,flexShrink:0}}><img src={Caution} alt="Caution" style={{ width: '70px', height: '40px', flexShrink: 0 }} /></span>
-              <div><div style={{fontSize:14,fontWeight:700,color:'#8a4040',marginBottom:4}}>In a medical emergency</div><div style={{fontSize:13,color:'#6a8a98',lineHeight:1.5}}>Call 911 (US) or your local emergency number immediately. Do not wait.</div></div>
+              <div><div style={{fontSize:14,fontWeight:700,color:'#8a4040',marginBottom:4}}>{t("In a medical emergency")}</div><div style={{fontSize:13,color:'#6a8a98',lineHeight:1.5}}>{t("Call 911 (US) or your local emergency number immediately. Do not wait.")}</div></div>
             </div>
           </div>
         )}
@@ -1636,6 +1652,7 @@ function LighthouseSection() {
 }
 
 function ShoreSection({ destination }:{destination:string|null}) {
+  const { t } = useI18n()
   const dest = DESTINATIONS.find(d=>d.id===destination)
   return (
     <section id="shore" style={{position:'relative',background:'linear-gradient(180deg,#9AB3CA 0%,#C6DDED 35%,#dfeaeb 70%,#f8f3ee 100%)',padding:'100px 24px 80px',overflow:'hidden',textAlign:'center'}}>
@@ -1646,15 +1663,15 @@ function ShoreSection({ destination }:{destination:string|null}) {
         </div>
         {dest&&<div style={{fontSize:24,marginBottom:16}}>{dest.flag}</div>}
         <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:20,lineHeight:1.2}}>
-          {dest?<><em style={{fontStyle:'italic',color:'#5a7a92'}}>{dest.label}</em> is waiting.</>:<>There's a <em style={{fontStyle:'italic',color:'#5a7a92'}}>bright and beautiful</em> place waiting for you.</>}
+          {dest?<><em style={{fontStyle:'italic',color:'#5a7a92'}}>{t(dest.label)}</em> {t("is waiting.")}</>:<>{t("There's a")} <em style={{fontStyle:'italic',color:'#5a7a92'}}>{t("bright and beautiful")}</em> {t("place waiting for you.")}</>}
         </h2>
         <p style={{fontSize:17,color:'#6a8a98',lineHeight:1.8,marginBottom:48}}>
-          {dest?`${dest.tagline}. Recovery is your voyage there — every single step counts.`:"Others have reached it. You can too."}
+          {dest?t("{tagline}. Recovery is your voyage there — every single step counts.",{tagline:t(dest.tagline)}):t("Others have reached it. You can too.")}
         </p>
         <div style={{display:'flex',gap:16,justifyContent:'center',flexWrap:'wrap'}}>
-          <a href="#letters"    style={{background:'linear-gradient(135deg,#9AB3CA,#7a9ab0)',color:'white',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15}}>Read survivor letters</a>
-          <a href="#chat"       style={{background:'rgba(154,179,202,.14)',color:'#3a5a72',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15,border:'1.5px solid rgba(154,179,202,.35)'}}>Join your crew</a>
-          <a href="#lighthouse" style={{background:'rgba(196,154,66,.1)',color:'#7a5020',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15,border:'1.5px solid rgba(196,154,66,.3)'}}>Get help now</a>
+          <a href="#letters"    style={{background:'linear-gradient(135deg,#9AB3CA,#7a9ab0)',color:'white',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15}}>{t("Read survivor letters")}</a>
+          <a href="#chat"       style={{background:'rgba(154,179,202,.14)',color:'#3a5a72',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15,border:'1.5px solid rgba(154,179,202,.35)'}}>{t("Join your crew")}</a>
+          <a href="#lighthouse" style={{background:'rgba(196,154,66,.1)',color:'#7a5020',padding:'14px 30px',borderRadius:50,textDecoration:'none',fontWeight:700,fontSize:15,border:'1.5px solid rgba(196,154,66,.3)'}}>{t("Get help now")}</a>
         </div>
       </div>
     </section>
@@ -1662,22 +1679,24 @@ function ShoreSection({ destination }:{destination:string|null}) {
 }
 
 function Footer() {
+  const { t } = useI18n()
   return (
     <footer style={{background:'#dfeaeb',padding:'48px 24px 32px',textAlign:'center',borderTop:'1px solid rgba(154,179,202,.2)'}}>
       <div style={{marginBottom:16,fontSize:24}}><img src={AnchorImage} alt="Anchor Icon" style={{ width: '24px', height: '24px', verticalAlign: 'middle' }} /></div>
       <div className="font-display" style={{fontSize:20,color:'#2c4a5c',marginBottom:12,fontStyle:'italic',fontWeight:300}}>Eunora</div>
-      <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 28px'}}>This website is a supportive space, not a substitute for medical care. If you are struggling, please reach out to a healthcare professional or one of the resources in the Lighthouse section.</p>
+      <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 28px'}}>{t("This website is a supportive space, not a substitute for medical care. If you are struggling, please reach out to a healthcare professional or one of the resources in the Lighthouse section.")}</p>
       <div style={{display:'flex',justifyContent:'center',gap:24,flexWrap:'wrap',marginBottom:28}}>
         {[['#hero','Home'],['#destination','Destination'],['#quests','Quests'],['#letters','Letters'],['#sailor','My Sailor'],['#chat','Crew'],['#lighthouse','Lighthouse']].map(([href,label])=>(
-          <a key={href} href={href} className="nav-link">{label}</a>
+          <a key={href} href={href} className="nav-link">{t(label)}</a>
         ))}
       </div>
-      <div style={{fontSize:12,color:'#8a9aaa'}}>Made with care for anyone navigating the storm. ❤︎</div>
+      <div style={{fontSize:12,color:'#8a9aaa'}}>{t("Made with care for anyone navigating the storm. ❤︎")}</div>
     </footer>
   )
 }
 
 function Nav({ active, destination, user, onLogin, onLogout }:{active:string;destination:string|null;user:{sailor:string}|null;onLogin:()=>void;onLogout:()=>void}) {
+  const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
     const pill: React.CSSProperties = {background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)',cursor:'pointer',fontFamily:'Nunito,sans-serif'}
   const dest = DESTINATIONS.find(d=>d.id===destination)
@@ -1686,16 +1705,17 @@ function Nav({ active, destination, user, onLogin, onLogout }:{active:string;des
     <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:50,padding:'14px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrolled?'rgba(223,234,235,.92)':'transparent',backdropFilter:scrolled?'blur(14px)':'none',borderBottom:scrolled?'1px solid rgba(154,179,202,.18)':'none',transition:'all .3s'}}>
       <div className="font-display" style={{color:scrolled?'#2c4a5c':'white',fontSize:17,fontWeight:600,display:'flex',alignItems:'center',gap:8}}>
         <span style={{color:scrolled?'#9AB3CA':'rgba(255,255,255,.8)'}}>⚓</span> Eunora
-        {dest&&<span style={{fontSize:12,fontFamily:'Nunito,sans-serif',fontStyle:'normal',fontWeight:400,color:scrolled?'#7a9ab0':'rgba(255,255,255,.75)'}}>→ {dest.flag} {dest.label}</span>}
+        {dest&&<span style={{fontSize:12,fontFamily:'Nunito,sans-serif',fontStyle:'normal',fontWeight:400,color:scrolled?'#7a9ab0':'rgba(255,255,255,.75)'}}>→ {dest.flag} {t(dest.label)}</span>}
       </div>
       <div style={{display:'flex',gap:18,alignItems:'center'}}>
         {[['#destination','Map'],['#quests','Quests'],['#sailor','Sailor'],['#letters','Letters']].map(([href,label])=>(
-          <a key={href} href={href} className={`nav-link ${active===href.slice(1)?'active':''}`} style={{color:active===href.slice(1)?(scrolled?'#4a6a82':'rgba(255,255,255,.95)'):scrolled?'#6a8a98':'rgba(255,255,255,.7)'}}>{label}</a>
+          <a key={href} href={href} className={`nav-link ${active===href.slice(1)?'active':''}`} style={{color:active===href.slice(1)?(scrolled?'#4a6a82':'rgba(255,255,255,.95)'):scrolled?'#6a8a98':'rgba(255,255,255,.7)'}}>{t(label)}</a>
         ))}
-        <a href="#lighthouse" style={{background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,textDecoration:'none',fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)'}}>Get Help</a>
-                {user
-          ? <button onClick={onLogout} title="Log out" style={pill}>{user.sailor} · Log out</button>
-          : <button onClick={onLogin} style={pill}>Log in</button>}
+        <a href="#lighthouse" style={{background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,textDecoration:'none',fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)'}}>{t("Get Help")}</a>
+        <LanguageToggle style={pill}/>
+        {user
+          ? <button onClick={onLogout} title={t("Log out")} style={pill}>{user.sailor} · {t("Log out")}</button>
+          : <button onClick={onLogin} style={pill}>{t("Log in")}</button>}
       </div>
     </nav>
   )

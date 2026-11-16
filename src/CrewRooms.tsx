@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
+import { useI18n } from './i18n'
 
 export type ChatUser = { id: string; sailor: string }
 type Room = { id: string; name: string; description: string; emoji: string; members: number }
@@ -57,6 +58,7 @@ const pillBtn = (on: boolean): React.CSSProperties => ({
 })
 
 export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
+  const { t, tr } = useI18n()
   const demo = !supabase
   const me: ChatUser | null = user ?? (demo ? { id: 'demo', sailor: 'GuestSailor' } : null)
 
@@ -80,10 +82,13 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     sb.from('rooms')
       .select('id,name,description,emoji,room_members(count)')
       .order('sort_order')
-      .then(({ data, error }: { data: any[] | null; error: unknown }) => {
+      .then(({ data, error }: {
+        data: { id: string; name: string; description: string; emoji: string; room_members: { count: number }[] }[] | null
+        error: unknown
+      }) => {
         if (cancelled) return
-        if (error) setError('Could not load the crews. Try refreshing the page.')
-        else setRooms((data ?? []).map((r: any) => ({ id: r.id, name: r.name, description: r.description, emoji: r.emoji, members: r.room_members?.[0]?.count ?? 0 })))
+        if (error) setError(t("Could not load the crews. Try refreshing the page."))
+        else setRooms((data ?? []).map((r) => ({ id: r.id, name: r.name, description: r.description, emoji: r.emoji, members: r.room_members?.[0]?.count ?? 0 })))
         setLoading(false)
       })
     return () => { cancelled = true }
@@ -94,7 +99,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     const sb = supabase
     if (!sb || !user) { setJoined(new Set()); return }
     sb.from('room_members').select('room_id').eq('user_id', user.id)
-      .then(({ data }: { data: any[] | null }) => setJoined(new Set((data ?? []).map((r: any) => r.room_id as string))))
+      .then(({ data }: { data: { room_id: string }[] | null }) => setJoined(new Set((data ?? []).map((r) => r.room_id as string))))
   }, [user?.id])
 
   // Messages for the open room (+ live updates)
@@ -107,9 +112,9 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     let cancelled = false
     sb.from('messages').select(MSG_COLS).eq('room_id', roomId)
       .order('created_at', { ascending: false }).limit(100)
-      .then(({ data, error }: { data: any[] | null; error: any }) => {
+      .then(({ data, error }: { data: any[] | null; error: unknown }) => {
         if (cancelled) return
-        if (error) setError('Could not load messages.')
+        if (error) setError(t("Could not load messages."))
         else setMsgs((data ?? []).slice().reverse().map(toMsg))
       })
     const channel = sb.channel(`room-${roomId}`)
@@ -138,7 +143,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     if (!sb) { setJoined(j => new Set(j).add(room.id)); bump(room.id, 1); return }
     if (!user) { onLogin(); return }
     const { error } = await sb.from('room_members').insert({ room_id: room.id, user_id: user.id })
-    if (error && error.code !== '23505') { setError('Could not join. Please try again.'); return }
+    if (error && error.code !== '23505') { setError(t("Could not join. Please try again.")); return }
     setJoined(j => new Set(j).add(room.id)); bump(room.id, 1)
   }
 
@@ -148,7 +153,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     if (!sb) { setJoined(j => { const n = new Set(j); n.delete(room.id); return n }); bump(room.id, -1); return }
     if (!user) return
     const { error } = await sb.from('room_members').delete().eq('room_id', room.id).eq('user_id', user.id)
-    if (error) { setError('Could not leave. Please try again.'); return }
+    if (error) { setError(t("Could not leave. Please try again.")); return }
     setJoined(j => { const n = new Set(j); n.delete(room.id); return n }); bump(room.id, -1)
   }
 
@@ -156,7 +161,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     const text = input.trim()
     if (!text || !active) return
     if (!me) { onLogin(); return }
-    if (Date.now() - lastSent.current < 2000) { setError('Easy there, sailor. Wait a moment between messages.'); return }
+    if (Date.now() - lastSent.current < 2000) { setError(t("Easy there, sailor. Wait a moment between messages.")); return }
     lastSent.current = Date.now()
     setError(''); setInput('')
     const sb = supabase
@@ -165,7 +170,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
       return
     }
     const { data, error } = await sb.from('messages').insert({ room_id: active.id, user_id: me.id, body: text }).select(MSG_COLS).single()
-    if (error || !data) { setError('Your message did not send. Make sure you have joined this crew.'); setInput(text); return }
+    if (error || !data) { setError(t("Your message did not send. Make sure you have joined this crew.")); setInput(text); return }
     setMsgs(m => (m.some(x => x.id === String((data as any).id)) ? m : [...m, toMsg(data)]))
   }
 
@@ -182,26 +187,26 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
       {decor}
       <div style={{ maxWidth: active ? 760 : 960, margin: '0 auto', position: 'relative', zIndex: 2 }}>
         <div style={{ textAlign: 'center', marginBottom: 44 }}>
-          <div style={{ fontSize: 12, letterSpacing: '.2em', color: '#5a7a82', textTransform: 'uppercase', fontWeight: 700, marginBottom: 14 }}>Anonymous crew rooms</div>
+          <div style={{ fontSize: 12, letterSpacing: '.2em', color: '#5a7a82', textTransform: 'uppercase', fontWeight: 700, marginBottom: 14 }}>{t("Anonymous crew rooms")}</div>
           <h2 className="font-display" style={{ fontSize: 'clamp(28px,4vw,46px)', fontWeight: 400, color: '#2c4a5c', marginBottom: 16, lineHeight: 1.2 }}>
-            Find your <em style={{ fontStyle: 'italic', color: '#7a6a5a' }}>crew</em>
+            {tr("Find your <i>crew</i>")}
           </h2>
           <p style={{ fontSize: 15, color: '#6a8a98', lineHeight: 1.7, maxWidth: 480, margin: '0 auto 20px' }}>
-            Pick a crew that fits how today feels. Every sailor here understands the storm.
+            {t("Pick a crew that fits how today feels. Every sailor here understands the storm.")}
           </p>
           {me ? (
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, background: 'rgba(255,255,255,.65)', border: '1px solid rgba(154,179,202,.25)', borderRadius: 50, padding: '8px 20px' }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: colorFor(me.sailor), boxShadow: `0 0 8px ${colorFor(me.sailor)}` }} />
-              <span style={{ fontSize: 13, fontWeight: 700, color: '#2c4a5c' }}>You are: {me.sailor}</span>
+              <span style={{ fontSize: 13, fontWeight: 700, color: '#2c4a5c' }}>{t("You are: {name}", { name: me.sailor })}</span>
             </div>
           ) : (
-            <button onClick={onLogin} style={{ ...pillBtn(false), padding: '10px 24px', fontSize: 13 }}>Log in to join the conversation</button>
+            <button onClick={onLogin} style={{ ...pillBtn(false), padding: '10px 24px', fontSize: 13 }}>{t("Log in to join the conversation")}</button>
           )}
         </div>
 
         {!active ? (
           <>
-            {loading && <div style={{ textAlign: 'center', color: '#6a8a98', fontSize: 14 }}>Loading the crews…</div>}
+            {loading && <div style={{ textAlign: 'center', color: '#6a8a98', fontSize: 14 }}>{t("Loading the crews…")}</div>}
             {!loading && rooms.length === 0 && <div style={{ textAlign: 'center', color: '#6a8a98', fontSize: 14 }}>No crews yet. Run the setup SQL to add some.</div>}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 20 }}>
               {rooms.map(room => (
@@ -210,13 +215,13 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
                   style={{ background: 'rgba(255,255,255,.72)', borderRadius: 20, padding: 24, backdropFilter: 'blur(8px)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 26 }}>{room.emoji}</span>
-                    <div style={{ fontWeight: 800, fontSize: 16, color: '#2c4a5c' }}>{room.name}</div>
+                    <div style={{ fontWeight: 800, fontSize: 16, color: '#2c4a5c' }}>{t(room.name)}</div>
                   </div>
-                  <div style={{ fontSize: 13, color: '#6a8a98', lineHeight: 1.6, flex: 1 }}>{room.description}</div>
+                  <div style={{ fontSize: 13, color: '#6a8a98', lineHeight: 1.6, flex: 1 }}>{t(room.description)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#8aa4b0' }}>{room.members} sailors</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#8aa4b0' }}>{t("{n} sailors", { n: room.members })}</span>
                     <button onClick={e => { e.stopPropagation(); joined.has(room.id) ? leave(room) : join(room) }} style={pillBtn(joined.has(room.id))}>
-                      {joined.has(room.id) ? 'Joined ✓' : 'Join'}
+                      {joined.has(room.id) ? t("Joined ✓") : t("Join")}
                     </button>
                   </div>
                 </div>
@@ -228,21 +233,21 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
         ) : (
           <div style={{ background: 'rgba(255,255,255,.65)', border: '1.5px solid rgba(154,179,202,.22)', borderRadius: 24, overflow: 'hidden', backdropFilter: 'blur(12px)', boxShadow: '0 8px 40px rgba(44,74,92,.08)' }}>
             <div style={{ padding: '14px 20px', background: 'linear-gradient(90deg,rgba(224,216,208,.6),rgba(198,221,237,.6))', borderBottom: '1px solid rgba(154,179,202,.15)', display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <button onClick={() => setActive(null)} style={{ background: 'none', border: 'none', color: '#5a7a92', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'Nunito,sans-serif', padding: 0 }}>← All crews</button>
+              <button onClick={() => setActive(null)} style={{ background: 'none', border: 'none', color: '#5a7a92', fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'Nunito,sans-serif', padding: 0 }}>{t("← All crews")}</button>
               <span style={{ fontSize: 20 }}>{active.emoji}</span>
               <div style={{ flex: 1, minWidth: 140 }}>
-                <div style={{ fontSize: 14, fontWeight: 800, color: '#2c4a5c' }}>{active.name}</div>
-                <div style={{ fontSize: 11, color: '#6a8a98' }}>{active.members} sailors</div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: '#2c4a5c' }}>{t(active.name)}</div>
+                <div style={{ fontSize: 11, color: '#6a8a98' }}>{t("{n} sailors", { n: active.members })}</div>
               </div>
-              <button onClick={() => (inRoom ? leave(active) : join(active))} style={pillBtn(inRoom)}>{inRoom ? 'Joined ✓' : 'Join crew'}</button>
+              <button onClick={() => (inRoom ? leave(active) : join(active))} style={pillBtn(inRoom)}>{inRoom ? t("Joined ✓") : t("Join crew")}</button>
             </div>
 
             <div style={{ margin: '14px 20px 0', padding: '10px 14px', borderRadius: 14, background: 'rgba(196,154,66,.1)', border: '1px solid rgba(196,154,66,.28)', fontSize: 12.5, color: '#5a4020', lineHeight: 1.55 }}>
-              📌 Be kind, and keep numbers (weights, calories, sizes) out of the chat. If you are in danger, call or text 988 (US) or your local emergency number. The Lighthouse section has more help.
+              📌 {t("Be kind, and keep numbers (weights, calories, sizes) out of the chat. If you are in danger, {crisis}. The Lighthouse section has more help.", { crisis: t("call or text 988 (US) or your local emergency number") })}
             </div>
 
             <div ref={listRef} style={{ height: 380, overflowY: 'auto', padding: '20px 20px 8px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {msgs.length === 0 && <div style={{ margin: 'auto', color: '#8a9aaa', fontSize: 14, textAlign: 'center' }}>It's quiet in here. Say hello 👋</div>}
+              {msgs.length === 0 && <div style={{ margin: 'auto', color: '#8a9aaa', fontSize: 14, textAlign: 'center' }}>{t("It's quiet in here. Say hello 👋")}</div>}
               {msgs.map(msg => {
                 const isMe = !!me && msg.userId === me.id
                 const color = colorFor(msg.sailor)
@@ -255,8 +260,8 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
                       <div style={{ fontSize: 10, color: '#9aaab0', marginTop: 4, textAlign: isMe ? 'right' : 'left', display: 'flex', gap: 10, justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                         <span>{msg.time}</span>
                         {!isMe && me && (reported.has(msg.id)
-                          ? <span>Reported. Thank you.</span>
-                          : <button onClick={() => report(msg)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 10, color: '#9aaab0', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Nunito,sans-serif' }}>Report</button>)}
+                          ? <span>{t("Reported. Thank you.")}</span>
+                          : <button onClick={() => report(msg)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 10, color: '#9aaab0', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Nunito,sans-serif' }}>{t("Report")}</button>)}
                       </div>
                     </div>
                   </div>
@@ -269,28 +274,28 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
             <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(154,179,202,.12)', display: 'flex', gap: 10, background: 'rgba(248,243,238,.4)', alignItems: 'center' }}>
               {!me ? (
                 <>
-                  <span style={{ flex: 1, fontSize: 13, color: '#6a8a98' }}>Log in to join the conversation.</span>
-                  <button onClick={onLogin} style={pillBtn(false)}>Log in</button>
+                  <span style={{ flex: 1, fontSize: 13, color: '#6a8a98' }}>{t("Log in to join the conversation.")}</span>
+                  <button onClick={onLogin} style={pillBtn(false)}>{t("Log in")}</button>
                 </>
               ) : !inRoom ? (
                 <>
-                  <span style={{ flex: 1, fontSize: 13, color: '#6a8a98' }}>Join this crew to chat.</span>
-                  <button onClick={() => join(active)} style={pillBtn(false)}>Join crew</button>
+                  <span style={{ flex: 1, fontSize: 13, color: '#6a8a98' }}>{t("Join this crew to chat.")}</span>
+                  <button onClick={() => join(active)} style={pillBtn(false)}>{t("Join crew")}</button>
                 </>
               ) : (
                 <>
-                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send() }} placeholder="Send a message to your crew…" maxLength={280}
+                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send() }} placeholder={t("Send a message to your crew…")} maxLength={280}
                     style={{ flex: 1, background: 'rgba(255,255,255,.75)', border: '1.5px solid rgba(154,179,202,.22)', borderRadius: 50, padding: '10px 20px', fontSize: 14, color: '#2c4a5c', outline: 'none', fontFamily: 'Nunito,sans-serif', transition: 'border-color .2s' }}
                     onFocus={e => { e.target.style.borderColor = 'rgba(154,179,202,.55)' }} onBlur={e => { e.target.style.borderColor = 'rgba(154,179,202,.22)' }} />
                   <button onClick={send} disabled={!input.trim()}
-                    style={{ background: input.trim() ? 'linear-gradient(135deg,#9AB3CA,#7a9ab0)' : 'rgba(154,179,202,.18)', color: input.trim() ? 'white' : '#9aaab0', border: 'none', borderRadius: 50, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: input.trim() ? 'pointer' : 'default', fontFamily: 'Nunito,sans-serif', transition: 'all .2s' }}>Send ⛵</button>
+                    style={{ background: input.trim() ? 'linear-gradient(135deg,#9AB3CA,#7a9ab0)' : 'rgba(154,179,202,.18)', color: input.trim() ? 'white' : '#9aaab0', border: 'none', borderRadius: 50, padding: '10px 22px', fontSize: 14, fontWeight: 700, cursor: input.trim() ? 'pointer' : 'default', fontFamily: 'Nunito,sans-serif', transition: 'all .2s' }}>{t("Send ⛵")}</button>
                 </>
               )}
             </div>
           </div>
         )}
 
-        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a9aaa', marginTop: 14, lineHeight: 1.6 }}>Safe, anonymous peer support, not a substitute for professional help. Be kind 💙</p>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#8a9aaa', marginTop: 14, lineHeight: 1.6 }}>{t("Safe, anonymous peer support, not a substitute for professional help. Be kind 💙")}</p>
       </div>
       {waves}
     </section>
