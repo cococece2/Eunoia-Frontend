@@ -14,7 +14,7 @@ const colorFor = (name: string) => {
 }
 const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-const MSG_COLS = 'id,user_id,body,created_at,profiles(sailor_name)'
+const MSG_COLS = 'id,user_id,body,created_at,profiles!messages_user_id_fkey(sailor_name)'
 const toMsg = (r: any): Msg => ({
   id: String(r.id),
   userId: r.user_id,

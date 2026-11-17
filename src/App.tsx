@@ -69,6 +69,7 @@ import { useUserLetters, WriteLetterButton } from './UserLetters'
 import { pickDaily } from './dailyQuests'
 import AuthPage from './AuthPage'
 import CrewRooms from './CrewRooms'
+import WelcomeSection from './WelcomeSection'
 import { useI18n, LanguageToggle } from './i18n'
 import { HELPLINES } from './i18n/helplines'
 
@@ -1733,6 +1734,7 @@ export default function App() {
     const auth = useAuth()
   const [showAuth, setShowAuth] = useState(false)
   const [savedCompleted, setSavedCompleted] = useState<string[]|undefined>(undefined)
+  const [doneToday, setDoneToday] = useState(0)
 
     // XP is lifetime (it only goes up). The ticked-off quests only count for the day they were done.
   const xpRef = useRef(0)
@@ -1740,11 +1742,12 @@ export default function App() {
 
   // When someone logs in, load their saved progress. When they log out, reset to a fresh voyage.
   useEffect(()=>{
-    if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests : []) }
-    else { setTotalXP(0); setSavedCompleted([]) }
+    if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests : []); setDoneToday(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests.length : 0) }
+    else { setTotalXP(0); setSavedCompleted([]); setDoneToday(0) }
   },[auth.profile])
 
   function saveQuests(ids:string[], gained:number) {
+    setDoneToday(ids.length)
     auth.saveProgress(xpRef.current+gained, ids, todayKey())
   }
 
@@ -1767,6 +1770,7 @@ export default function App() {
         </div>
       )}
       <HeroSection onEnter={()=>{setJourneyStarted(true);document.getElementById('destination')?.scrollIntoView({behavior:'smooth'})}} destination={destination}/>
+      {auth.user&&<WelcomeSection name={auth.user.sailor} rank={xpLevel(totalXP).rank} xp={totalXP} nextXp={xpLevel(totalXP).next} isTop={xpLevel(totalXP).rank==='Captain'} done={doneToday} total={QUEST_CATS.reduce((n,c)=>n+c.quests.length,0)}/>}
       <DestinationSection selected={destination} onSelect={setDestination}/>
             <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests}/>
       <StormSection/>
