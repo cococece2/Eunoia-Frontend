@@ -1285,7 +1285,7 @@ function StormSection() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:20,marginBottom:52}}>
 
 
-          {[{stat:'8 in 100',label:'teens suffer from an eating disorder',icon:<img src={Wave} alt="Wave" style={{width: '70px', height: '35px', verticalAlign: 'middle'}} />},{stat:'8 in 10',label:'people recover with the right support',icon: <img src={Anchor} alt="Anchor" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />},{stat:'Right now',label:'is the right time to reach out',icon: <img src={Sunset} alt="Sunset" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />}].map(it=>(
+          {[{stat:'8 in 100',label:'teens suffer from an eating disorder',icon:<img src={Wave} alt="Wave" style={{width: '70px', height: '35px', verticalAlign: 'middle'}} />},{stat:'8 in 10',label:'people recover with the right support',icon: <img src={Trident} alt="Trident" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />},{stat:'Right now',label:'is the right time to reach out',icon: <img src={Sunset} alt="Sunset" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />}].map(it=>(
             <div key={it.stat} style={{background:'#fff',border:'1px solid rgba(198,221,237,.18)',borderRadius:16,padding:'26px 20px',textAlign:'center'}}>
               
               
