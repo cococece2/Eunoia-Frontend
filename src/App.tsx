@@ -76,6 +76,22 @@ import { HELPLINES } from './i18n/helplines'
 // The three little pictures above the stats. Same size and centered, so the cards line up.
 const STAT_ICON: CSSProperties = { width: 100, height: 100, objectFit: 'cover', display: 'block' }
 
+// Draws a picture at a steady size: finds the artwork inside its canvas, centers it, and scales it to fit the box.
+function ArtIcon({ src, alt, canvas, bbox, size }: { src: string; alt: string; canvas: [number, number]; bbox: [number, number, number, number]; size: number }) {
+  const [cw, ch] = canvas
+  const [l, t, r, b] = bbox
+  const k = (size * 0.92) / Math.max(r - l, b - t)
+  return (
+    <span style={{ position: 'relative', display: 'inline-block', width: size, height: size, flexShrink: 0, overflow: 'hidden' }}>
+      <img src={src} alt={alt} style={{ position: 'absolute', maxWidth: 'none', width: cw * k, height: ch * k, left: size / 2 - ((l + r) / 2) * k, top: size / 2 - ((t + b) / 2) * k }} />
+    </span>
+  )
+}
+// Lets one icon be shown at different sizes (big in the picker, smaller in the unlocked list).
+function withSize(el: ReactNode, px: number): ReactNode {
+  return isValidElement(el) && el.type === ArtIcon ? cloneElement(el as ReactElement<{ size: number }>, { size: px }) : el
+}
+
 // Shrinks a destination picture (the flag) to a small icon, for tight spots like the top bar.
 function SmallFlag({ flag, size, fit = 'contain' }: { flag: ReactNode; size: number; fit?: 'contain' | 'cover' }) {
   if (!isValidElement(flag)) return <>{flag}</>
@@ -223,10 +239,10 @@ const AVATAR_OPTIONS = {
   ],
   companions: [
     { id:'none',    label:"None",            cost:0,   baseUnlocked:true,  emoji:''   },
-    { id:'kitten',  label:"Sea Kitten",      cost:60,  baseUnlocked:false, emoji: <img src={Cat} alt="Cat" style={{ width: '50px', height: '25px', verticalAlign: 'middle' }} /> },
-    { id:'corgi',   label:"Corgi",           cost:80,  baseUnlocked:false, emoji: <img src={Dog} alt="Dog" style={{ width: '50px', height: '30px', verticalAlign: 'middle' }} />,},
-    { id:'turtle',  label:"Sea Turtle",      cost:100, baseUnlocked:false, emoji: <img src={Turtle} alt="Turtle" style={{ width: '35px', height: '20px', verticalAlign: 'middle' }} /> },
-    { id:'octopus', label:"Baby Octopus",    cost:120, baseUnlocked:false, emoji: <img src={Octopus} alt="Octopus" style={{ width: '30px', height: '35px', verticalAlign: 'middle' }} />,},
+    { id:'kitten',  label:"Sea Kitten",      cost:60,  baseUnlocked:false, emoji: <ArtIcon src={Cat} alt="Cat" canvas={[537,293]} bbox={[195,44,371,256]} size={30} /> },
+    { id:'corgi',   label:"Corgi",           cost:80,  baseUnlocked:false, emoji: <ArtIcon src={Dog} alt="Dog" canvas={[537,293]} bbox={[169,33,367,269]} size={30} />,},
+    { id:'turtle',  label:"Sea Turtle",      cost:100, baseUnlocked:false, emoji: <ArtIcon src={Turtle} alt="Turtle" canvas={[412,225]} bbox={[69,42,344,189]} size={30} /> },
+    { id:'octopus', label:"Baby Octopus",    cost:120, baseUnlocked:false, emoji: <ArtIcon src={Octopus} alt="Octopus" canvas={[251,293]} bbox={[22,50,228,243]} size={30} />,},
   ],
 }
 
@@ -991,13 +1007,13 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                     return (
                       <button key={item.id} onClick={()=>{ if(unlocked) setAvatar(a=>({...a,[stateKey]:item.id})); else tryUnlock(item.id,item.cost,item.baseUnlocked) }}
                         style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',borderRadius:12,border:`1.5px solid ${selected?'#9AB3CA':unlocked?'rgba(154,179,202,.2)':'rgba(154,179,202,.12)'}`,background:selected?'rgba(154,179,202,.18)':unlocked?'rgba(255,255,255,.7)':'rgba(240,235,230,.5)',cursor:unlocked?'pointer':'not-allowed',opacity:unlocked?1:.7,transition:'all .2s',fontFamily:'Nunito,sans-serif',textAlign:'left'}}>
-                        {item.color ? <div style={{width:18,height:18,borderRadius:'50%',background:item.color,border:'1.5px solid rgba(0,0,0,.08)',flexShrink:0}}/> : <span style={{fontSize:14,flexShrink:0}}>{(item as {emoji?:string}).emoji||'✦'}</span>}
+                        {item.color ? <div style={{width:18,height:18,borderRadius:'50%',background:item.color,border:'1.5px solid rgba(0,0,0,.08)',flexShrink:0}}/> : <span style={{fontSize:14,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',width:isValidElement(item.emoji)?30:20}}>{withSize(item.emoji||'✦',30)}</span>}
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:12,fontWeight:700,color:selected?'#2c4a5c':'#4a6a82',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{t(item.label)}</div>
-                          {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}>
-                          <img src={Lock} alt="Lock" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} />
+                          {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600,display:'flex',alignItems:'center',gap:4}}>
+                          <ArtIcon src={Lock} alt="Lock" canvas={[502,274]} bbox={[177,37,324,237]} size={16} />
                            {item.cost} 
-                           <img src={Anchor} alt="Anchor" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
+                           <ArtIcon src={Anchor} alt="Anchor" canvas={[498,272]} bbox={[163,29,334,242]} size={16} />
                            </div>}
                           {selected&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>{t("Equipped")}</div>}
                         </div>
@@ -1036,7 +1052,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                   <div style={{display:'flex',flexDirection:'column',gap:8,marginBottom:16}}>
                     {unlockedItems.slice(0,4).map((it,i)=>(
                       <div key={i} style={{display:'flex',alignItems:'center',gap:10,padding:'8px 12px',background:'rgba(248,243,238,.7)',borderRadius:10}}>
-                        <div style={{width:32,height:32,borderRadius:8,background:'rgba(198,221,237,.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0}}>{it.icon}</div>
+                        <div style={{width:32,height:32,borderRadius:8,background:'rgba(198,221,237,.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,flexShrink:0}}>{withSize(it.icon,26)}</div>
                         <div><div style={{fontSize:13,fontWeight:600,color:'#2c4a5c'}}>{t(it.label)}</div><div style={{fontSize:11,color:'#8a9aa8'}}>{t(it.type)}</div></div>
                       </div>
                     ))}
@@ -1050,7 +1066,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
               {nextReward && (
                 <div style={{background:'rgba(248,243,238,.8)',borderRadius:14,padding:'14px'}}>
                   <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:8}}>{t("Next Reward")}</div>
-                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10}}>{t("Earn {n} more",{n:nextReward.cost - goldAnchors})} <img src={AnchorImage} alt="Anchor Image" style={{ width: '14px', height: '14px', verticalAlign: 'middle' }} /> {t('to unlock "{item}"',{item:t(nextReward.label)})}</div>
+                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10,display:'flex',flexWrap:'wrap',alignItems:'center',gap:5}}>{t("Earn {n} more",{n:nextReward.cost - goldAnchors})} <img src={AnchorImage} alt="Anchor Image" style={{ width: '14px', height: '14px', verticalAlign: 'middle' }} /> {t('to unlock "{item}"',{item:t(nextReward.label)})}</div>
                   <div style={{height:8,borderRadius:8,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
                     <div style={{height:'100%',borderRadius:8,background:'linear-gradient(90deg,#c49a42,#f0d080)',width:`${Math.min(100,(goldAnchors/nextReward.cost)*100)}%`,transition:'width .5s ease'}}/>
                   </div>
@@ -1084,7 +1100,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
                   <span style={{fontSize:18}}>{item.emoji}</span>
                   <div style={{flex:1}}>
                     <div style={{fontSize:13,fontWeight:700,color:isPlaced?'#2c4a5c':'#4a6a82'}}>{t(item.label)}</div>
-                    {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600}}><img src={Lock} alt="Lock" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginRight: '4px' }} /> {item.cost} <img src={AnchorImage} alt="Anchor Image" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} /></div>}
+                    {!unlocked&&<div style={{fontSize:10,color:'#c49a42',fontWeight:600,display:'flex',alignItems:'center',gap:4}}><ArtIcon src={Lock} alt="Lock" canvas={[502,274]} bbox={[177,37,324,237]} size={16} /> {item.cost} <ArtIcon src={AnchorImage} alt="AnchorImage" canvas={[447,244]} bbox={[130,3,316,240]} size={16} /></div>}
                     {unlocked&&isPlaced&&<div style={{fontSize:10,color:'#7a9ab0',fontWeight:600}}>{t("Placed ✓")}</div>}
                   </div>
                 </button>
