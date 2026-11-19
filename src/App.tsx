@@ -57,7 +57,6 @@ import SOS from './imports/SOS.png'
 import Floaty from './imports/Floaty.png'
 import Siren from './imports/Siren.png'
 import Rainbow from './imports/Rainbow.png'
-import Lightning from './imports/Lightning.png'
 import Caution from './imports/Caution.png'
 import Info from './imports/Info.png'
 import Paw from './imports/Paw.png'
@@ -70,6 +69,7 @@ import { pickDaily } from './dailyQuests'
 import AuthPage from './AuthPage'
 import CrewRooms from './CrewRooms'
 import WelcomeSection from './WelcomeSection'
+import GumballMachine from './GumballMachine'
 import { useI18n, LanguageToggle } from './i18n'
 import { HELPLINES } from './i18n/helplines'
 
@@ -1254,17 +1254,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
             </div>
           ))}
         </div>
-        <div style={{marginTop:28,background:'linear-gradient(135deg,rgba(196,154,66,.1),rgba(154,112,60,.07))',border:'1.5px solid rgba(196,154,66,.3)',borderRadius:20,padding:'24px 28px',display:'flex',alignItems:'center',gap:20,flexWrap:'wrap'}}>
-          <span style={{fontSize:36}}><img src={Lightning} alt="Lightning Icon" style={{ width: '36px', height: '36px', verticalAlign: 'middle' }} /></span>
-          <div style={{flex:1}}>
-            <div style={{fontWeight:800,fontSize:16,color:'#5a4020',marginBottom:4}}>{t("EPIC QUEST — Bonus Challenge")}</div>
-            <div style={{fontSize:15,color:'#2c4a5c',marginBottom:6}}>{t('Write one sentence about what "shore" means to you and save it somewhere you will see every day.')}</div>
-            <div style={{fontSize:12,color:'#c49a42',fontWeight:700}}>{t("+50 XP · +50 Gold Anchors")} 
-            <img src={AnchorImage} alt="Anchor Image" style={{ width: '12px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
-             {t("· Rare achievement")}</div>
-          </div>
-          <span style={{fontSize:28}}><img src={Trophy} alt="Trophy" style={{ width: '28px', height: '28px', verticalAlign: 'middle' }} /></span>
-        </div>
+        <GumballMachine/>
       </div>
       <Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>
     </section>
