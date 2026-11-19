@@ -73,10 +73,13 @@ import GumballMachine from './GumballMachine'
 import { useI18n, LanguageToggle } from './i18n'
 import { HELPLINES } from './i18n/helplines'
 
+// The three little pictures above the stats. Same size and centered, so the cards line up.
+const STAT_ICON: CSSProperties = { width: 100, height: 100, objectFit: 'cover', display: 'block' }
+
 // Shrinks a destination picture (the flag) to a small icon, for tight spots like the top bar.
-function SmallFlag({ flag, size }: { flag: ReactNode; size: number }) {
+function SmallFlag({ flag, size, fit = 'contain' }: { flag: ReactNode; size: number; fit?: 'contain' | 'cover' }) {
   if (!isValidElement(flag)) return <>{flag}</>
-  const style: CSSProperties = { width: size, height: size, objectFit: 'contain', verticalAlign: 'middle' }
+  const style: CSSProperties = { width: size, height: size, objectFit: fit, verticalAlign: 'middle' }
   return cloneElement(flag as ReactElement<{ style?: CSSProperties }>, { style })
 }
 
@@ -1110,7 +1113,7 @@ function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:str
       ))}
       {dest&&(
         <div className="animate-fade-in-up" style={{position:'absolute',top:100,left:40,background:'rgba(255,255,255,.18)',border:'1px solid rgba(255,255,255,.35)',borderRadius:50,padding:'8px 20px',backdropFilter:'blur(10px)',display:'flex',alignItems:'center',gap:8}}>
-          <span style={{fontSize:18}}>{dest.flag}</span>
+          <SmallFlag flag={dest.flag} size={36} fit="cover"/>
           <span style={{fontSize:13,fontWeight:700,color:'white',letterSpacing:'.05em'}}>{t("Sailing to {place}",{place:t(dest.label)})}</span>
         </div>
       )}
@@ -1285,11 +1288,11 @@ function StormSection() {
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:20,marginBottom:52}}>
 
 
-          {[{stat:'8 in 100',label:'teens suffer from an eating disorder',icon:<img src={Wave} alt="Wave" style={{width: '70px', height: '35px', verticalAlign: 'middle'}} />},{stat:'8 in 10',label:'people recover with the right support',icon: <img src={Trident} alt="Trident" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />},{stat:'Right now',label:'is the right time to reach out',icon: <img src={Sunset} alt="Sunset" style={{width: '28px', height: '28px', verticalAlign: 'middle'}} />}].map(it=>(
+          {[{stat:'8 in 100',label:'teens suffer from an eating disorder',icon:<img src={Wave} alt="Wave" style={STAT_ICON} />},{stat:'8 in 10',label:'people recover with the right support',icon: <img src={Anchor} alt="Anchor" style={STAT_ICON} />},{stat:'Right now',label:'is the right time to reach out',icon: <img src={Sunset} alt="Sunset" style={STAT_ICON} />}].map(it=>(
             <div key={it.stat} style={{background:'#fff',border:'1px solid rgba(198,221,237,.18)',borderRadius:16,padding:'26px 20px',textAlign:'center'}}>
               
               
-              <div style={{fontSize:28,marginBottom:10}}>{it.icon}</div>
+              <div style={{display:'flex',justifyContent:'center',marginBottom:8}}>{it.icon}</div>
               <div className="font-display" style={{fontSize:28,fontWeight:600,color:'#f0d080',marginBottom:8}}>{t(it.stat)}</div>
               <div style={{fontSize:14,color:'#9AB3CA',lineHeight:1.5}}>{t(it.label)}</div>
             </div>
@@ -1659,7 +1662,7 @@ function ShoreSection({ destination }:{destination:string|null}) {
         <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 20 }}>
           <img src={Sun} alt="Sun" style={{ width: '150px', height: '80px' }} />
         </div>
-        {dest&&<div style={{fontSize:24,marginBottom:16}}>{dest.flag}</div>}
+        {dest&&<div style={{display:'flex',justifyContent:'center',marginBottom:16}}><SmallFlag flag={dest.flag} size={150} fit="cover"/></div>}
         <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:20,lineHeight:1.2}}>
           {dest?<><em style={{fontStyle:'italic',color:'#5a7a92'}}>{t(dest.label)}</em> {t("is waiting.")}</>:<>{t("There's a")} <em style={{fontStyle:'italic',color:'#5a7a92'}}>{t("bright and beautiful")}</em> {t("place waiting for you.")}</>}
         </h2>
