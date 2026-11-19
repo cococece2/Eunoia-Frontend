@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, isValidElement, cloneElement, type ReactNode, type ReactElement, type CSSProperties } from 'react'
 import EiffelTower from './imports/Tower.png';
 import Kyoto from './imports/CherryBlossom.png';
 import Santorini from './imports/Santorini.png'
@@ -72,6 +72,13 @@ import WelcomeSection from './WelcomeSection'
 import GumballMachine from './GumballMachine'
 import { useI18n, LanguageToggle } from './i18n'
 import { HELPLINES } from './i18n/helplines'
+
+// Shrinks a destination picture (the flag) to a small icon, for tight spots like the top bar.
+function SmallFlag({ flag, size }: { flag: ReactNode; size: number }) {
+  if (!isValidElement(flag)) return <>{flag}</>
+  const style: CSSProperties = { width: size, height: size, objectFit: 'contain', verticalAlign: 'middle' }
+  return cloneElement(flag as ReactElement<{ style?: CSSProperties }>, { style })
+}
 
 
 
@@ -1696,7 +1703,7 @@ function Nav({ active, destination, user, onLogin, onLogout }:{active:string;des
     <nav style={{position:'fixed',top:0,left:0,right:0,zIndex:50,padding:'14px 28px',display:'flex',alignItems:'center',justifyContent:'space-between',background:scrolled?'rgba(223,234,235,.92)':'transparent',backdropFilter:scrolled?'blur(14px)':'none',borderBottom:scrolled?'1px solid rgba(154,179,202,.18)':'none',transition:'all .3s'}}>
       <div className="font-display" style={{color:scrolled?'#2c4a5c':'white',fontSize:17,fontWeight:600,display:'flex',alignItems:'center',gap:8}}>
         <span style={{color:scrolled?'#9AB3CA':'rgba(255,255,255,.8)'}}>⚓</span> Eunora
-        {dest&&<span style={{fontSize:12,fontFamily:'Nunito,sans-serif',fontStyle:'normal',fontWeight:400,color:scrolled?'#7a9ab0':'rgba(255,255,255,.75)'}}>→ {dest.flag} {t(dest.label)}</span>}
+        {dest&&<span style={{display:'inline-flex',alignItems:'center',gap:6,fontSize:12,fontFamily:'Nunito,sans-serif',fontStyle:'normal',fontWeight:400,color:scrolled?'#7a9ab0':'rgba(255,255,255,.75)'}}><span>→</span><SmallFlag flag={dest.flag} size={28}/><span>{t(dest.label)}</span></span>}
       </div>
       <div style={{display:'flex',gap:18,alignItems:'center'}}>
         {[['#destination','Map'],['#quests','Quests'],['#sailor','Sailor'],['#letters','Letters']].map(([href,label])=>(
