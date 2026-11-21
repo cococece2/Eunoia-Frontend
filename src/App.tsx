@@ -1066,7 +1066,7 @@ function SailorSection({ totalXP }:{ totalXP:number }) {
               {nextReward && (
                 <div style={{background:'rgba(248,243,238,.8)',borderRadius:14,padding:'14px'}}>
                   <div style={{fontSize:12,fontWeight:700,color:'#6a8a98',marginBottom:8}}>{t("Next Reward")}</div>
-                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10,display:'flex',flexWrap:'wrap',alignItems:'center',gap:5}}>{t("Earn {n} more",{n:nextReward.cost - goldAnchors})} <img src={AnchorImage} alt="Anchor Image" style={{ width: '14px', height: '14px', verticalAlign: 'middle' }} /> {t('to unlock "{item}"',{item:t(nextReward.label)})}</div>
+                  <div style={{fontSize:13,color:'#2c4a5c',marginBottom:10,display:'flex',flexWrap:'wrap',alignItems:'center',gap:5}}>{t("Earn {n} more",{n:nextReward.cost - goldAnchors})} <img src={AnchorImage} alt="Anchor Image" style={{ width: '20px', height: '14px', verticalAlign: 'middle' }} /> {t('to unlock "{item}"',{item:t(nextReward.label)})}</div>
                   <div style={{height:8,borderRadius:8,background:'rgba(154,179,202,.2)',overflow:'hidden'}}>
                     <div style={{height:'100%',borderRadius:8,background:'linear-gradient(90deg,#c49a42,#f0d080)',width:`${Math.min(100,(goldAnchors/nextReward.cost)*100)}%`,transition:'width .5s ease'}}/>
                   </div>
@@ -1237,7 +1237,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <span style={{fontSize:22}}>{lv.icon}</span>
                 <div><div style={{fontWeight:800,fontSize:16,color:'#2c4a5c'}}>{t(lv.rank)}</div><div style={{fontSize:12,color:'#6a8a98'}}>{t("{xp} / {max} XP · {gold} Gold Anchors",{xp:totalXP,max:MAX_XP,gold:totalXP})} 
-                <img src={AnchorImage} alt="Anchor Image" style={{ width: '20px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} /></div></div>
+                <span style={{marginLeft:4,verticalAlign:'middle',display:'inline-block',lineHeight:0}}><ArtIcon src={AnchorImage} alt="Anchor" canvas={[447,244]} bbox={[130,3,316,240]} size={16} /></span></div></div>
               </div>
               <div style={{display:'flex',gap:8}}>{BADGES.map(b=><div key={b.id} title={t(b.label)} style={{fontSize:20,opacity:earnedBadges.find(e=>e.id===b.id)?1:.22,transition:'opacity .4s'}}>{b.icon}</div>)}</div>
             </div>
@@ -1270,7 +1270,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
                       <div style={{flex:1}}>
                         <div style={{fontSize:14,color:done?'#8a9a98':'#2c4a5c',textDecoration:done?'line-through':'none',lineHeight:1.5,transition:'color .3s'}}>{t(q.text)}</div>
                         <div style={{fontSize:11,fontWeight:700,color:done?'#9aaab0':cat.color,marginTop:3}}>{t("+{xp} XP · +{xp} Gold Anchors",{xp:q.xp})} 
-                        <img src={AnchorImage} alt="Anchor Image" style={{ width: '24px', height: '12px', verticalAlign: 'middle', marginLeft: '4px' }} />
+                        <span style={{marginLeft:4,verticalAlign:'middle',display:'inline-block',lineHeight:0}}><ArtIcon src={AnchorImage} alt="Anchor" canvas={[447,244]} bbox={[130,3,316,240]} size={14} /></span>
                         </div>
                       </div>
                     </div>
@@ -1699,7 +1699,7 @@ function Footer() {
   const { t } = useI18n()
   return (
     <footer style={{background:'#dfeaeb',padding:'48px 24px 32px',textAlign:'center',borderTop:'1px solid rgba(154,179,202,.2)'}}>
-      <div style={{marginBottom:16,fontSize:24}}><img src={AnchorImage} alt="Anchor Icon" style={{ width: '24px', height: '24px', verticalAlign: 'middle' }} /></div>
+      <div style={{marginBottom:16,display:'flex',justifyContent:'center'}}><ArtIcon src={AnchorImage} alt="Anchor Icon" canvas={[447,244]} bbox={[130,3,316,240]} size={40} /></div>
       <div className="font-display" style={{fontSize:20,color:'#2c4a5c',marginBottom:12,fontStyle:'italic',fontWeight:300}}>Eunora</div>
       <p style={{fontSize:13,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 28px'}}>{t("This website is a supportive space, not a substitute for medical care. If you are struggling, please reach out to a healthcare professional or one of the resources in the Lighthouse section.")}</p>
       <div style={{display:'flex',justifyContent:'center',gap:24,flexWrap:'wrap',marginBottom:28}}>
