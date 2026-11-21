@@ -67,6 +67,8 @@ import { useAuth, todayKey } from './useAuth'
 import { useUserLetters, WriteLetterButton } from './UserLetters'
 import { pickDaily } from './dailyQuests'
 import AuthPage from './AuthPage'
+import AdminPage from './AdminPage'
+import { MyLettersButton } from './MyLetters'
 import CrewRooms from './CrewRooms'
 import WelcomeSection from './WelcomeSection'
 import GumballMachine from './GumballMachine'
@@ -1323,6 +1325,67 @@ function StormSection() {
   )
 }
 
+// A slideable row of bottles: swipe or drag on touch screens, arrow buttons or ← → keys elsewhere.
+function BottleCarousel({ letters, onOpen }:{letters:typeof LETTERS;onOpen:(l:typeof LETTERS[0])=>void}) {
+  const { t } = useI18n()
+  const track = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ atStart:true, atEnd:true, thumbLeft:0, thumbWidth:1 })
+  const update = useCallback(()=>{
+    const el = track.current
+    if(!el) return
+    const max = el.scrollWidth - el.clientWidth
+    setPos({
+      atStart: el.scrollLeft <= 4,
+      atEnd: el.scrollLeft >= max - 4,
+      thumbWidth: el.scrollWidth ? el.clientWidth / el.scrollWidth : 1,
+      thumbLeft: el.scrollWidth ? el.scrollLeft / el.scrollWidth : 0,
+    })
+  },[])
+  useEffect(()=>{
+    const el = track.current
+    update()
+    el?.addEventListener('scroll',update,{passive:true})
+    window.addEventListener('resize',update)
+    return ()=>{ el?.removeEventListener('scroll',update); window.removeEventListener('resize',update) }
+  },[update,letters.length])
+  function slide(dir:1|-1) {
+    const el = track.current
+    if(!el) return
+    el.scrollBy({ left: dir * Math.max(172, el.clientWidth - 172), behavior:'smooth' })
+  }
+  const scrollable = !(pos.atStart && pos.atEnd)
+  const fade = `linear-gradient(90deg, ${pos.atStart?'#000':'transparent'} 0, #000 48px, #000 calc(100% - 48px), ${pos.atEnd?'#000':'transparent'} 100%)`
+  const arrow = (dir:1|-1, hidden:boolean): CSSProperties => ({
+    position:'absolute', top:160+105, [dir<0?'left':'right']:-6, transform:'translateY(-50%)', zIndex:5,
+    width:44, height:44, borderRadius:'50%', border:'1.5px solid rgba(154,179,202,.5)', background:'rgba(255,255,255,.75)',
+    color:'#3a5a72', fontSize:20, cursor:'pointer', backdropFilter:'blur(8px)', boxShadow:'0 6px 18px rgba(44,74,92,.15)',
+    display:'flex', alignItems:'center', justifyContent:'center', opacity:hidden?0:1, pointerEvents:hidden?'none':'auto', transition:'opacity .25s',
+  })
+  return (
+    <div role="region" aria-roledescription="carousel" aria-label={t("Letters in Bottles")} style={{position:'relative',marginTop:-160}}>
+      <button aria-label={t("Previous letters")} onClick={()=>slide(-1)} style={arrow(-1,!scrollable||pos.atStart)}>‹</button>
+      <button aria-label={t("Next letters")} onClick={()=>slide(1)} style={arrow(1,!scrollable||pos.atEnd)}>›</button>
+      <div ref={track} className="bottle-track" tabIndex={0}
+        onKeyDown={e=>{ if(e.key==='ArrowRight'){e.preventDefault();slide(1)} if(e.key==='ArrowLeft'){e.preventDefault();slide(-1)} }}
+        style={{overflowX:'auto',scrollSnapType:'x mandatory',scrollPaddingInline:44,paddingTop:160,paddingBottom:24,outline:'none',WebkitMaskImage:scrollable?fade:undefined,maskImage:scrollable?fade:undefined}}>
+        <div style={{display:'flex',gap:32,width:'max-content',margin:'0 auto',padding:'0 44px'}}>
+          {letters.map(letter=>(
+            <div key={letter.id} style={{flex:'0 0 140px',scrollSnapAlign:'start'}}>
+              <BottleCard letter={letter} onClick={()=>onOpen(letter)}/>
+            </div>
+          ))}
+        </div>
+      </div>
+      {scrollable && (
+        <div aria-hidden="true" style={{position:'relative',height:4,maxWidth:260,margin:'4px auto 0',borderRadius:2,background:'rgba(255,255,255,.4)'}}>
+          <div style={{position:'absolute',top:0,bottom:0,borderRadius:2,background:'#5a7a92',left:`${pos.thumbLeft*100}%`,width:`${pos.thumbWidth*100}%`,transition:'left .15s'}}/>
+        </div>
+      )}
+      <div style={{textAlign:'center',fontSize:12.5,color:'#4a6a82',marginTop:10}}>{t("{n} letters · slide to see more",{n:letters.length})}</div>
+    </div>
+  )
+}
+
 function BottlesSection({ user, onLogin }:{user:{id:string;sailor:string}|null;onLogin:()=>void}) {
   const { t } = useI18n()
   const userLetters = useUserLetters()
@@ -1342,11 +1405,7 @@ function BottlesSection({ user, onLogin }:{user:{id:string;sailor:string}|null;o
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:18,lineHeight:1.2}}>{t("Letters in")} <em style={{fontStyle:'italic',color:'#5a7a92'}}>{t("Bottles")}</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:500,margin:'0 auto'}}>{t("Survivors have sealed their stories in these bottles. Click a bottle, watch the cork fly, and let the letter unfurl.")}</p>
         </div>
-                <div style={{overflowX:'auto',paddingTop:160,marginTop:-160,paddingBottom:30}}>
-          <div style={{display:'flex',gap:32,width:'max-content',margin:'0 auto',padding:'0 8px'}}>
-            {[...LETTERS,...userLetters].map(letter=><div key={letter.id} style={{flex:'0 0 140px'}}><BottleCard letter={letter} onClick={()=>handleBottleClick(letter)}/></div>)}
-          </div>
-        </div>
+        <BottleCarousel letters={[...LETTERS,...userLetters]} onOpen={handleBottleClick}/>
         <div style={{textAlign:'center',marginTop:20}}><WriteLetterButton user={user} onLogin={onLogin}/></div>
       </div>
       <SeabedDecor/>
@@ -1712,7 +1771,7 @@ function Footer() {
   )
 }
 
-function Nav({ active, destination, user, onLogin, onLogout }:{active:string;destination:string|null;user:{sailor:string}|null;onLogin:()=>void;onLogout:()=>void}) {
+function Nav({ active, destination, user, onLogin, onLogout }:{active:string;destination:string|null;user:{id:string;sailor:string}|null;onLogin:()=>void;onLogout:()=>void}) {
   const { t } = useI18n()
   const [scrolled, setScrolled] = useState(false)
     const pill: React.CSSProperties = {background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)',cursor:'pointer',fontFamily:'Nunito,sans-serif'}
@@ -1730,6 +1789,7 @@ function Nav({ active, destination, user, onLogin, onLogout }:{active:string;des
         ))}
         <a href="#lighthouse" style={{background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,textDecoration:'none',fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)'}}>{t("Get Help")}</a>
         <LanguageToggle style={pill}/>
+        {user&&<MyLettersButton uid={user.id} style={pill}/>}
         {user
           ? <button onClick={onLogout} title={t("Log out")} style={pill}>{user.sailor} · {t("Log out")}</button>
           : <button onClick={onLogin} style={pill}>{t("Log in")}</button>}
@@ -1740,7 +1800,20 @@ function Nav({ active, destination, user, onLogin, onLogout }:{active:string;des
 
 // ── App ───────────────────────────────────────────────────────────────────────
 
+// The admin area is at  #/admin . Everything else is the main site.
+const isAdminRoute = () => window.location.hash.startsWith('#/admin')
+
 export default function App() {
+  const [admin, setAdmin] = useState(isAdminRoute)
+  useEffect(()=>{
+    const h = ()=>setAdmin(isAdminRoute())
+    window.addEventListener('hashchange',h)
+    return ()=>window.removeEventListener('hashchange',h)
+  },[])
+  return admin ? <AdminPage/> : <MainSite/>
+}
+
+function MainSite() {
   const [activeSection, setActiveSection] = useState('hero')
   const [journeyStarted, setJourneyStarted] = useState(false)
   const [destination, setDestination] = useState<string|null>(null)

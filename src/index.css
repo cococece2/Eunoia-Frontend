@@ -356,3 +356,7 @@ body {
 
 /* Wax seal */
 .wax-seal { animation: wax-pulse 2.5s ease-in-out infinite; }
+
+/* Letters in Bottles carousel: hide the scrollbar (a slim progress bar is shown instead) */
+.bottle-track { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.bottle-track::-webkit-scrollbar { display: none; }

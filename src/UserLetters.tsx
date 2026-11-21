@@ -13,7 +13,7 @@ type UserLetterRow = {
 
 const GLASS = ['#4e7d70', '#3d6878', '#4a6875', '#7d6040', '#3d6880', '#4a5878']
 
-/** Letters written by users that you have approved (approved = true in Supabase). */
+/** Letters written by users that an admin has approved (status = 'approved'). */
 export function useUserLetters(): UserLetter[] {
   const [letters, setLetters] = useState<UserLetter[]>([])
   useEffect(() => {
@@ -22,9 +22,9 @@ export function useUserLetters(): UserLetter[] {
     let cancelled = false
     sb.from('letters')
       .select('id,body,profiles(sailor_name)')
-      .eq('approved', true)
+      .eq('status', 'approved')
       .order('created_at', { ascending: false })
-      .limit(12)
+      .limit(50)
       .then(({ data }: { data: UserLetterRow[] | null }) => {
         if (cancelled || !data) return
         setLetters(data.map((r, i: number) => {
