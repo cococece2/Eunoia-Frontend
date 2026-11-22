@@ -122,7 +122,7 @@ function LetterCard({ letter, onReview }: { letter: AdminLetter; onReview: (id: 
   )
 }
 
-function ReviewQueue({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
+function ReviewQueue({ email, onSignOut, switcher }: { email?: string; onSignOut: () => void; switcher?: React.ReactNode }) {
   const [tab, setTab] = useState<LetterStatus>('pending')
   const [letters, setLetters] = useState<AdminLetter[] | null>(null)
   const [counts, setCounts] = useState<Record<LetterStatus, number>>({ pending: 0, approved: 0, rejected: 0 })
@@ -158,6 +158,7 @@ function ReviewQueue({ email, onSignOut }: { email?: string; onSignOut: () => vo
 
   return (
     <Shell email={email} onSignOut={onSignOut}>
+      {switcher}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 18 }}>
         <h1 className="font-display" style={{ fontSize: 30, fontWeight: 400, margin: 0 }}>Letters in bottles</h1>
         <button onClick={load} style={{ ...btn(SOFT, '#3a5a72'), marginLeft: 'auto' }}>↻ Refresh</button>
@@ -179,6 +180,211 @@ function ReviewQueue({ email, onSignOut }: { email?: string; onSignOut: () => vo
           : <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>{letters.map(l => <LetterCard key={l.id} letter={l} onReview={review} />)}</div>}
     </Shell>
   )
+}
+
+// ── Bonus challenges (the gumball machine) ───────────────────────────────────
+type ChallengeRow = {
+  id: number
+  body: string
+  translations: Record<string, string> | null
+  active: boolean
+  created_at: string
+}
+
+const TRANSLATION_FIELDS = [
+  { code: 'ja', label: '日本語 (Japanese)' },
+  { code: 'es', label: 'Español (Spanish)' },
+  { code: 'fr', label: 'Français (French)' },
+  { code: 'zh', label: '简体中文 (Chinese)' },
+  { code: 'ko', label: '한국어 (Korean)' },
+] as const
+
+// A simple safety net that matches the site's rules: no numbers about weight, food or body size,
+// and nothing about diets, fasting or exercise tips. It cannot catch everything, so still read what you write.
+const RISKY = /\b\d+(\.\d+)?\s?(kg|kgs|lb|lbs|pounds?|kcal|cals?|calories|cm|inch|inches)\b|\b(calorie|calories|kcal|diet|dieting|fasting|purge|purging|weigh|weigh-in|bmi)\b/i
+const RISKY_MESSAGE = 'Please leave out numbers about weight, food or body size, and anything about diets, fasting or exercise tips.'
+
+function SectionTabs({ section, onChange }: { section: 'letters' | 'bonus'; onChange: (s: 'letters' | 'bonus') => void }) {
+  const tab = (id: 'letters' | 'bonus', label: string) => (
+    <button key={id} onClick={() => onChange(id)} aria-pressed={section === id}
+      style={{ ...btn(section === id ? 'white' : 'rgba(255,255,255,.45)', section === id ? '#2c4a5c' : '#5a7a92'), border: `1.5px solid ${section === id ? '#9AB3CA' : 'rgba(154,179,202,.3)'}` }}>{label}</button>
+  )
+  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('bonus', 'Bonus challenges')}</nav>
+}
+
+function ChallengeForm({ initialBody = '', initialTranslations = {}, saveLabel, onSave, onCancel }: {
+  initialBody?: string
+  initialTranslations?: Record<string, string>
+  saveLabel: string
+  onSave: (body: string, translations: Record<string, string>) => Promise<string | null>
+  onCancel?: () => void
+}) {
+  const [body, setBody] = useState(initialBody)
+  const [tr, setTr] = useState<Record<string, string>>(initialTranslations)
+  const [showTr, setShowTr] = useState(Object.keys(initialTranslations).length > 0)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const text = body.trim()
+    if (text.length < 5) { setError('Write at least a few words.'); return }
+    const clean: Record<string, string> = {}
+    for (const f of TRANSLATION_FIELDS) { const v = (tr[f.code] ?? '').trim(); if (v) clean[f.code] = v }
+    if ([text, ...Object.values(clean)].some(v => RISKY.test(v))) { setError(RISKY_MESSAGE); return }
+    setBusy(true); setError('')
+    const err = await onSave(text, clean)
+    setBusy(false)
+    if (err) { setError(err); return }
+    if (!onCancel) { setBody(''); setTr({}); setShowTr(false) }
+  }
+
+  return (
+    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <label style={{ fontSize: 12, fontWeight: 700, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase' }}>Challenge (English)
+        <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={300} rows={2} required
+          placeholder="e.g. Write down one thing that made you smile today."
+          style={{ ...input, marginTop: 6, resize: 'vertical', fontSize: 14, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+      </label>
+      <div style={{ fontSize: 12, color: '#8a9aaa' }}>{body.trim().length}/300 · Keep it gentle. No numbers (weights, calories, sizes), no diet or exercise tips.</div>
+      <button type="button" onClick={() => setShowTr(o => !o)} style={{ ...btn('transparent', '#5a7a92'), alignSelf: 'flex-start', padding: '4px 0' }}>
+        {showTr ? '− Hide translations' : '+ Add translations (optional)'}
+      </button>
+      {showTr && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ fontSize: 12.5, color: '#6a8a98', lineHeight: 1.5 }}>Leave a language empty and visitors in that language will see the English text.</div>
+          {TRANSLATION_FIELDS.map(f => (
+            <label key={f.code} style={{ fontSize: 12, fontWeight: 700, color: '#5a7a82' }}>{f.label}
+              <textarea value={tr[f.code] ?? ''} onChange={e => setTr(t => ({ ...t, [f.code]: e.target.value }))} maxLength={300} rows={2}
+                style={{ ...input, marginTop: 4, resize: 'vertical', fontSize: 14, fontWeight: 400 }} />
+            </label>
+          ))}
+        </div>
+      )}
+      {error && <div role="alert" style={{ fontSize: 13, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '9px 14px' }}>{error}</div>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button type="submit" disabled={busy} style={{ ...btn(GOOD), opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : saveLabel}</button>
+        {onCancel && <button type="button" onClick={onCancel} style={btn(SOFT, '#3a5a72')}>Cancel</button>}
+      </div>
+    </form>
+  )
+}
+
+function BonusChallenges({ email, onSignOut, switcher }: { email?: string; onSignOut: () => void; switcher: React.ReactNode }) {
+  const [rows, setRows] = useState<ChallengeRow[] | null>(null)
+  const [editing, setEditing] = useState<number | null>(null)
+  const [error, setError] = useState('')
+  const [flash, setFlash] = useState('')
+
+  const load = useCallback(async () => {
+    const sb = supabase
+    if (!sb) return
+    setError('')
+    const { data, error } = await sb.from('bonus_challenges')
+      .select('id,body,translations,active,created_at').order('id', { ascending: true })
+    if (error) { setError(error.message.includes('bonus_challenges') ? 'The bonus_challenges table is missing. Run 04-bonus-challenges.sql in Supabase first.' : error.message); setRows([]); return }
+    setRows(data as ChallengeRow[])
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  function say(msg: string) { setFlash(msg); setTimeout(() => setFlash(''), 4500) }
+
+  async function add(body: string, translations: Record<string, string>) {
+    if (!supabase) return 'Not connected.'
+    const { error } = await supabase.from('bonus_challenges').insert({ body, translations })
+    if (error) return error.message
+    say('Added. Visitors will see it in the gumball machine the next time they open the site.')
+    await load()
+    return null
+  }
+  async function save(id: number, body: string, translations: Record<string, string>) {
+    if (!supabase) return 'Not connected.'
+    const { error } = await supabase.from('bonus_challenges').update({ body, translations }).eq('id', id)
+    if (error) return error.message
+    setEditing(null)
+    say('Saved.')
+    await load()
+    return null
+  }
+  async function toggle(row: ChallengeRow) {
+    if (!supabase) return
+    const { error } = await supabase.from('bonus_challenges').update({ active: !row.active }).eq('id', row.id)
+    if (error) { setError(error.message); return }
+    say(row.active ? 'Hidden. It will not show in the gumball machine.' : 'Showing again.')
+    await load()
+  }
+  async function remove(row: ChallengeRow) {
+    if (!supabase) return
+    if (!window.confirm('Delete this challenge for good? (Hiding it is the safer choice.)')) return
+    const { error } = await supabase.from('bonus_challenges').delete().eq('id', row.id)
+    if (error) { setError(error.message); return }
+    say('Deleted.')
+    await load()
+  }
+
+  const activeCount = rows?.filter(r => r.active).length ?? 0
+
+  return (
+    <Shell email={email} onSignOut={onSignOut}>
+      {switcher}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+        <h1 className="font-display" style={{ fontSize: 30, fontWeight: 400, margin: 0 }}>Bonus challenges</h1>
+        <button onClick={load} style={{ ...btn(SOFT, '#3a5a72'), marginLeft: 'auto' }}>↻ Refresh</button>
+      </div>
+      <p style={{ margin: '0 0 18px', fontSize: 14, color: '#6a8a98', lineHeight: 1.6 }}>These are the quests inside the gumball machine. Changes show up for visitors the next time they open the site. No update needed.</p>
+
+      {flash && <div role="status" style={{ marginBottom: 14, fontSize: 13.5, color: '#3e6a55', background: 'rgba(106,138,120,.16)', borderRadius: 12, padding: '10px 14px' }}>{flash}</div>}
+      {error && <div role="alert" style={{ marginBottom: 14, fontSize: 13.5, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '10px 14px' }}>{error}</div>}
+
+      <section style={{ ...card, padding: '20px 22px', marginBottom: 22 }}>
+        <h2 style={{ fontSize: 16, margin: '0 0 12px' }}>Add a new challenge</h2>
+        <ChallengeForm saveLabel="Add challenge" onSave={add} />
+      </section>
+
+      {rows !== null && rows.length > 0 && activeCount === 0 && (
+        <div role="status" style={{ marginBottom: 14, fontSize: 13.5, color: '#5a4020', background: 'rgba(196,154,66,.14)', borderRadius: 12, padding: '10px 14px' }}>Nothing is showing right now, so the site uses its built-in challenges instead. Show at least one below.</div>
+      )}
+
+      {rows === null
+        ? <p style={{ color: '#6a8a98' }}>Loading…</p>
+        : rows.length === 0
+          ? <div style={{ ...card, padding: '30px 20px', textAlign: 'center', color: '#6a8a98' }}>No challenges yet. The site is using its built-in ones. Add your first above.</div>
+          : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {rows.map(r => (
+                <article key={r.id} style={{ ...card, padding: '16px 20px', opacity: r.active ? 1 : 0.65 }}>
+                  {editing === r.id ? (
+                    <ChallengeForm initialBody={r.body} initialTranslations={r.translations ?? {}} saveLabel="Save changes"
+                      onSave={(b, t) => save(r.id, b, t)} onCancel={() => setEditing(null)} />
+                  ) : (
+                    <>
+                      <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6 }}>{r.body}</p>
+                      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 12 }}>
+                        {!r.active && <span style={{ fontSize: 12, fontWeight: 700, color: '#8a5a5a', background: 'rgba(138,90,90,.1)', borderRadius: 50, padding: '3px 10px' }}>Hidden</span>}
+                        {r.translations && Object.keys(r.translations).length > 0 && <span style={{ fontSize: 12, color: '#6a8a98' }}>Translated: {Object.keys(r.translations).join(', ')}</span>}
+                        <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                          <button onClick={() => setEditing(r.id)} style={btn(SOFT, '#3a5a72')}>Edit</button>
+                          <button onClick={() => toggle(r)} style={btn(SOFT, '#3a5a72')}>{r.active ? 'Hide' : 'Show'}</button>
+                          <button onClick={() => remove(r)} style={btn(BAD)}>Delete</button>
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+    </Shell>
+  )
+}
+
+function AdminArea({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
+  const [section, setSection] = useState<'letters' | 'bonus'>('letters')
+  const switcher = <SectionTabs section={section} onChange={setSection} />
+  return section === 'letters'
+    ? <ReviewQueue email={email} onSignOut={onSignOut} switcher={switcher} />
+    : <BonusChallenges email={email} onSignOut={onSignOut} switcher={switcher} />
 }
 
 export default function AdminPage() {
@@ -215,5 +421,5 @@ export default function AdminPage() {
       </div>
     </Shell>
   )
-  return <ReviewQueue email={session.user.email} onSignOut={signOut} />
+  return <AdminArea email={session.user.email} onSignOut={signOut} />
 }

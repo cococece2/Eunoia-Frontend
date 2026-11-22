@@ -1,21 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import Trophy from './imports/Trophy.png'
 import { useI18n } from './i18n'
+import { useBonusChallenges, type Challenge } from './bonusChallenges'
 
 // The bonus-quest gumball machine. Turn the handle, a gumball drops out, tap it to open your quest.
-// The quests are plain English sentences. They are translated through t(), like the rest of the site.
-const BONUS_QUESTS = [
-  'Write one sentence about what "shore" means to you and save it somewhere you will see every day.',
-  'Tell someone you trust one thing you are proud of this week.',
-  'Do one tiny kind thing for someone, like a compliment or a thank-you.',
-  'Step outside or look out a window and notice one beautiful thing.',
-  'Put on a song that feels safe and listen to it all the way through.',
-  'Write down one thing you are grateful your body let you do today, like hugging someone or laughing.',
-  'Write a short note to your future self about the calm seas ahead.',
-  'Message a friend just to say hi, no reason needed.',
-  'Do something cozy for a few minutes: a warm drink, a soft blanket, a favourite show.',
-]
-
+// The quests come from the database (add them on the admin page, #/admin). If the database has none,
+// the built-in list in bonusChallenges.ts is used. Each one is translated if a translation exists.
 const BALL_COLORS = ['#f4a6a0', '#f6d88a', '#a8d5c0', '#a9c6e0', '#cdb8e6', '#f7c59f']
 // x, y positions of the gumballs inside the glass (bottom-heavy, like a real machine)
 const BALLS: [number, number][] = [
@@ -54,20 +44,21 @@ const CSS = `
 `
 
 export default function GumballMachine() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
+  const challenges = useBonusChallenges()
   const [phase, setPhase] = useState<Phase>('idle')
-  const [quest, setQuest] = useState(0)
+  const [quest, setQuest] = useState<Challenge | null>(null)
   const [color, setColor] = useState(BALL_COLORS[0])
   const timer = useRef<number | undefined>(undefined)
-  const lastQuest = useRef(-1)
+  const lastQuest = useRef<number | string | null>(null)
   useEffect(() => () => window.clearTimeout(timer.current), [])
 
   function roll() {
     if (phase === 'rolling') return
     // pick a quest that is not the one we just had
-    let q = Math.floor(Math.random() * BONUS_QUESTS.length)
-    if (q === lastQuest.current) q = (q + 1) % BONUS_QUESTS.length
-    lastQuest.current = q
+    let q = challenges[Math.floor(Math.random() * challenges.length)]
+    if (challenges.length > 1 && q.id === lastQuest.current) q = challenges[(challenges.indexOf(q) + 1) % challenges.length]
+    lastQuest.current = q.id
     setQuest(q)
     setColor(BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)])
     setPhase('rolling')
@@ -173,11 +164,11 @@ export default function GumballMachine() {
         <div aria-live="polite">
           {status && <div style={{ fontSize: 15, color: '#2c4a5c', marginBottom: 14 }}>{status}</div>}
 
-          {phase === 'opened' && (
+          {phase === 'opened' && quest && (
             <div className="gm-card" style={{ background: 'rgba(255,255,255,.75)', border: `2px solid ${color}`, borderRadius: 16, padding: '16px 18px', display: 'flex', gap: 14, alignItems: 'flex-start', marginBottom: 14 }}>
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 12, color: '#c49a42', fontWeight: 800, letterSpacing: '.08em', textTransform: 'uppercase', marginBottom: 4 }}>{t('Your bonus quest')}</div>
-                <div style={{ fontSize: 15, color: '#2c4a5c', lineHeight: 1.55 }}>{t(BONUS_QUESTS[quest])}</div>
+                <div style={{ fontSize: 15, color: '#2c4a5c', lineHeight: 1.55 }}>{quest ? (quest.translations?.[lang] || t(quest.body)) : ''}</div>
               </div>
               <img src={Trophy} alt="" style={{ width: 28, height: 28, flexShrink: 0 }} />
             </div>
