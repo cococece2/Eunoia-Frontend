@@ -204,14 +204,14 @@ const TRANSLATION_FIELDS = [
 const RISKY = /\b\d+(\.\d+)?\s?(kg|kgs|lb|lbs|pounds?|kcal|cals?|calories|cm|inch|inches)\b|\b(calorie|calories|kcal|diet|dieting|fasting|purge|purging|weigh|weigh-in|bmi)\b/i
 const RISKY_MESSAGE = 'Please leave out numbers about weight, food or body size, and anything about diets, fasting or exercise tips.'
 
-type Section = 'letters' | 'daily' | 'bonus'
+type Section = 'letters' | 'flagged' | 'daily' | 'bonus'
 
 function SectionTabs({ section, onChange }: { section: Section; onChange: (s: Section) => void }) {
   const tab = (id: Section, label: string) => (
     <button key={id} onClick={() => onChange(id)} aria-pressed={section === id}
       style={{ ...btn(section === id ? 'white' : 'rgba(255,255,255,.45)', section === id ? '#2c4a5c' : '#5a7a92'), border: `1.5px solid ${section === id ? '#9AB3CA' : 'rgba(154,179,202,.3)'}` }}>{label}</button>
   )
-  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}</nav>
+  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('flagged', 'Flagged messages')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}</nav>
 }
 
 function TranslationFields({ tr, setTr }: { tr: Record<string, string>; setTr: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
@@ -381,6 +381,116 @@ function BonusChallenges({ email, onSignOut, switcher }: { email?: string; onSig
               ))}
             </div>
           )}
+    </Shell>
+  )
+}
+
+// ── Flagged messages (chat messages people have reported) ─────────────────────
+type Flagged = {
+  message_id: number
+  body: string
+  room_name: string
+  author_id: string
+  author_name: string | null
+  hidden: boolean
+  report_count: number
+  last_reported: string
+  review_status: 'kept' | 'hidden' | null
+  reviewed_at: string | null
+  created_at: string
+}
+
+function FlaggedCard({ m, onDecide }: { m: Flagged; onDecide: (id: number, decision: 'keep' | 'hide', note: string) => Promise<string | null> }) {
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const when = (iso: string) => { try { return new Date(iso).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) } catch { return '' } }
+
+  async function go(decision: 'keep' | 'hide') {
+    setBusy(true); setError('')
+    const err = await onDecide(m.message_id, decision, note)
+    setBusy(false)
+    if (err) setError(err)
+  }
+
+  const pending = !m.reviewed_at || new Date(m.last_reported) > new Date(m.reviewed_at)
+  return (
+    <article style={{ ...card, padding: '16px 20px' }}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 10 }}>
+        <span style={{ fontSize: 12, fontWeight: 700, color: '#8a5a5a', background: 'rgba(138,90,90,.1)', borderRadius: 50, padding: '3px 10px' }}>🚩 {m.report_count} {m.report_count === 1 ? 'report' : 'reports'}</span>
+        <span style={{ fontSize: 12, fontWeight: 700, color: m.hidden ? '#8a5a5a' : '#3e6a55', background: m.hidden ? 'rgba(138,90,90,.1)' : 'rgba(106,138,120,.16)', borderRadius: 50, padding: '3px 10px' }}>{m.hidden ? 'Hidden from the chat' : 'Visible in the chat'}</span>
+        {m.reviewed_at && <span style={{ fontSize: 12, color: '#6a8a98' }}>{pending ? 'Reported again after your review' : `You ${m.review_status === 'hidden' ? 'hid it' : 'kept it'} · ${when(m.reviewed_at)}`}</span>}
+        <span style={{ marginLeft: 'auto', fontSize: 12, color: '#8a9aaa' }}>last reported {when(m.last_reported)}</span>
+      </div>
+      <p style={{ margin: '0 0 6px', fontSize: 15, lineHeight: 1.6, color: '#2c3a46', background: 'rgba(154,179,202,.12)', borderRadius: 12, padding: '10px 14px', wordBreak: 'break-word' }}>{m.body}</p>
+      <div style={{ fontSize: 12.5, color: '#6a8a98', marginBottom: 12 }}>By <b>{m.author_name ?? 'a sailor'}</b> in {m.room_name} · {when(m.created_at)}</div>
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        Note to the sailor (optional)
+        <textarea value={note} onChange={e => setNote(e.target.value)} maxLength={500} rows={2}
+          placeholder="e.g. Thanks for being part of the crew. Please keep numbers about weight and food out of the chat."
+          style={{ ...input, marginTop: 6, resize: 'vertical', fontSize: 14, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+      </label>
+      <div style={{ fontSize: 12, color: '#8a9aaa', margin: '6px 0 12px', lineHeight: 1.5 }}>
+        They get a notification if you hide the message or write a note. They are never told who reported them.
+      </div>
+      {error && <div role="alert" style={{ fontSize: 13, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '9px 14px', marginBottom: 10 }}>{error}</div>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button disabled={busy} onClick={() => go('keep')} style={{ ...btn(GOOD), opacity: busy ? 0.6 : 1 }}>{note.trim() ? 'Keep message + send note' : 'Keep message'}</button>
+        <button disabled={busy} onClick={() => go('hide')} style={{ ...btn(BAD), opacity: busy ? 0.6 : 1 }}>{note.trim() ? 'Hide message + send note' : 'Hide message + notify'}</button>
+      </div>
+    </article>
+  )
+}
+
+function FlaggedMessages({ email, onSignOut, switcher }: { email?: string; onSignOut: () => void; switcher: React.ReactNode }) {
+  const [rows, setRows] = useState<Flagged[] | null>(null)
+  const [pendingOnly, setPendingOnly] = useState(true)
+  const [error, setError] = useState('')
+  const [flash, setFlash] = useState('')
+
+  const load = useCallback(async () => {
+    const sb = supabase
+    if (!sb) return
+    setError('')
+    const { data, error } = await sb.rpc('admin_flagged_messages', { only_pending: pendingOnly })
+    if (error) { setError(error.message.includes('admin_flagged_messages') ? 'The flagged-messages tools are missing. Run 06-notifications.sql in Supabase first.' : error.message); setRows([]); return }
+    setRows((data ?? []) as Flagged[])
+  }, [pendingOnly])
+
+  useEffect(() => { load() }, [load])
+
+  async function decide(id: number, decision: 'keep' | 'hide', note: string) {
+    if (!supabase) return 'Not connected.'
+    const { error } = await supabase.rpc('review_message', { msg_id: id, decision, note: note.trim() || null })
+    if (error) return error.message
+    setFlash(decision === 'hide' ? 'Message hidden. The sailor has been notified.' : note.trim() ? 'Message kept. Your note was sent.' : 'Message kept.')
+    setTimeout(() => setFlash(''), 5000)
+    await load()
+    return null
+  }
+
+  const pill = (on: boolean): CSSProperties => ({ ...btn(on ? GOOD : SOFT, on ? '#fff' : '#3a5a72') })
+  return (
+    <Shell email={email} onSignOut={onSignOut}>
+      {switcher}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+        <h1 className="font-display" style={{ fontSize: 30, fontWeight: 400, margin: 0 }}>Flagged messages</h1>
+        <button onClick={load} style={{ ...btn(SOFT, '#3a5a72'), marginLeft: 'auto' }}>↻ Refresh</button>
+      </div>
+      <p style={{ margin: '0 0 16px', fontSize: 14, color: '#6a8a98', lineHeight: 1.6 }}>
+        Chat messages that sailors have reported. A message is hidden automatically after 3 reports, and you can hide or restore it here. Hidden messages disappear for everyone.
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+        <button onClick={() => setPendingOnly(true)} style={pill(pendingOnly)}>Needs review</button>
+        <button onClick={() => setPendingOnly(false)} style={pill(!pendingOnly)}>All reported</button>
+      </div>
+      {flash && <div role="status" style={{ marginBottom: 14, fontSize: 13.5, color: '#3e6a55', background: 'rgba(106,138,120,.16)', borderRadius: 12, padding: '10px 14px' }}>{flash}</div>}
+      {error && <div role="alert" style={{ marginBottom: 14, fontSize: 13.5, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '10px 14px' }}>{error}</div>}
+      {rows === null
+        ? <p style={{ color: '#6a8a98' }}>Loading…</p>
+        : rows.length === 0
+          ? <div style={{ ...card, padding: '30px 20px', textAlign: 'center', color: '#6a8a98' }}>{pendingOnly ? 'Nothing to review. All clear. 🌊' : 'No messages have been reported yet.'}</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>{rows.map(m => <FlaggedCard key={m.message_id} m={m} onDecide={decide} />)}</div>}
     </Shell>
   )
 }
@@ -606,6 +716,7 @@ function DailyTasks({ email, onSignOut, switcher }: { email?: string; onSignOut:
 function AdminArea({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
   const [section, setSection] = useState<Section>('letters')
   const switcher = <SectionTabs section={section} onChange={setSection} />
+  if (section === 'flagged') return <FlaggedMessages email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'daily') return <DailyTasks email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'bonus') return <BonusChallenges email={email} onSignOut={onSignOut} switcher={switcher} />
   return <ReviewQueue email={email} onSignOut={onSignOut} switcher={switcher} />

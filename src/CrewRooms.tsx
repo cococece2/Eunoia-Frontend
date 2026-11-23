@@ -4,7 +4,7 @@ import { useI18n } from './i18n'
 
 export type ChatUser = { id: string; sailor: string }
 type Room = { id: string; name: string; description: string; emoji: string; members: number }
-type Msg = { id: string; userId: string | null; sailor: string; text: string; time: string }
+type Msg = { id: string; userId: string | null; sailor: string; text: string; time: string; replyTo: string | null }
 
 const COLORS = ['#7a9ab0', '#6a8a9a', '#8a7a9a', '#6a8a78', '#9a8a6a', '#8a7070', '#7090a8', '#6a7a88']
 const colorFor = (name: string) => {
@@ -14,13 +14,14 @@ const colorFor = (name: string) => {
 }
 const fmt = (iso: string) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-const MSG_COLS = 'id,user_id,body,created_at,profiles!messages_user_id_fkey(sailor_name)'
+const MSG_COLS = 'id,user_id,body,created_at,reply_to,profiles!messages_user_id_fkey(sailor_name)'
 const toMsg = (r: any): Msg => ({
   id: String(r.id),
   userId: r.user_id,
   sailor: r.profiles?.sailor_name ?? 'Sailor',
   text: r.body,
   time: fmt(r.created_at),
+  replyTo: r.reply_to ? String(r.reply_to) : null,
 })
 
 // ── Preview mode (used only until Supabase is connected) ─────────────────────
@@ -33,12 +34,12 @@ const DEMO_ROOMS: Room[] = [
 ]
 const DEMO_MSGS: Record<string, Msg[]> = {
   daily: [
-    { id: 'd1', userId: 'x1', sailor: 'CoralDrifter_47', text: 'Hey everyone 👋 Just found this place. Really needed it today.', time: '9:14 AM' },
-    { id: 'd2', userId: 'x2', sailor: 'TealHarbor_22', text: "Welcome 💙 We're all sailing together here, no judgment.", time: '9:15 AM' },
+    { id: 'd1', userId: 'x1', sailor: 'CoralDrifter_47', text: 'Hey everyone 👋 Just found this place. Really needed it today.', time: '9:14 AM', replyTo: null },
+    { id: 'd2', userId: 'x2', sailor: 'TealHarbor_22', text: "Welcome 💙 We're all sailing together here, no judgment.", time: '9:15 AM', replyTo: null },
   ],
   wins: [
-    { id: 'w1', userId: 'x3', sailor: 'MoonRipple_31', text: 'I ate lunch with my family for the first time in months 🌊 Small win.', time: '9:31 AM' },
-    { id: 'w2', userId: 'x2', sailor: 'TealHarbor_22', text: 'THAT IS HUGE 🎉 Please be proud of yourself.', time: '9:32 AM' },
+    { id: 'w1', userId: 'x3', sailor: 'MoonRipple_31', text: 'I ate lunch with my family for the first time in months 🌊 Small win.', time: '9:31 AM', replyTo: null },
+    { id: 'w2', userId: 'x2', sailor: 'TealHarbor_22', text: 'THAT IS HUGE 🎉 Please be proud of yourself.', time: '9:32 AM', replyTo: null },
   ],
 }
 
@@ -70,6 +71,8 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(!demo)
   const [reported, setReported] = useState<Set<string>>(new Set())
+  const [replyTo, setReplyTo] = useState<Msg | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const lastSent = useRef(0)
   const idRef = useRef(1000)
   const listRef = useRef<HTMLDivElement>(null)
@@ -104,7 +107,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
 
   // Messages for the open room (+ live updates)
   useEffect(() => {
-    setMsgs([]); setError(''); setInput('')
+    setMsgs([]); setError(''); setInput(''); setReplyTo(null)
     if (!active) return
     const sb = supabase
     if (!sb) { setMsgs(DEMO_MSGS[active.id] ?? []); return }
@@ -166,12 +169,40 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
     setError(''); setInput('')
     const sb = supabase
     if (!sb) {
-      setMsgs(m => [...m, { id: String(idRef.current++), userId: me.id, sailor: me.sailor, text, time: fmt(new Date().toISOString()) }])
+      setMsgs(m => [...m, { id: String(idRef.current++), userId: me.id, sailor: me.sailor, text, time: fmt(new Date().toISOString()), replyTo: replyTo?.id ?? null }])
+      setReplyTo(null)
       return
     }
-    const { data, error } = await sb.from('messages').insert({ room_id: active.id, user_id: me.id, body: text }).select(MSG_COLS).single()
+    const row: Record<string, unknown> = { room_id: active.id, user_id: me.id, body: text }
+    if (replyTo) row.reply_to = Number(replyTo.id)
+    const { data, error } = await sb.from('messages').insert(row).select(MSG_COLS).single()
     if (error || !data) { setError(t("Your message did not send. Make sure you have joined this crew.")); setInput(text); return }
+    setReplyTo(null)
     setMsgs(m => (m.some(x => x.id === String((data as any).id)) ? m : [...m, toMsg(data)]))
+  }
+
+  // Put "@Name " in the box so the sailor gets a tag notification.
+  function tag(name: string) {
+    setInput(v => {
+      const mention = `@${name} `
+      if (v.includes(mention)) return v
+      return (v && !v.endsWith(' ') ? v + ' ' : v) + mention
+    })
+    inputRef.current?.focus()
+  }
+
+  function startReply(m: Msg) {
+    setReplyTo(m)
+    inputRef.current?.focus()
+  }
+
+  // Shows @Name tags in bold, for sailors who have spoken in this room.
+  function withTags(text: string) {
+    const names = Array.from(new Set(msgs.map(m => m.sailor))).filter(n => text.includes('@' + n)).sort((a, b) => b.length - a.length)
+    if (names.length === 0) return text
+    const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const re = new RegExp('(@(?:' + names.map(esc).join('|') + ')(?![A-Za-z0-9_]))', 'g')
+    return text.split(re).map((part, i) => (i % 2 === 1 ? <b key={i} style={{ color: '#5a6a9a' }}>{part}</b> : part))
   }
 
   async function report(m: Msg) {
@@ -255,10 +286,23 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
                   <div key={msg.id} className="chat-msg" style={{ display: 'flex', flexDirection: isMe ? 'row-reverse' : 'row', gap: 10, alignItems: 'flex-start' }}>
                     <div style={{ width: 34, height: 34, borderRadius: '50%', background: `linear-gradient(135deg,${color},rgba(198,221,237,.5))`, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14 }}>⚓</div>
                     <div style={{ maxWidth: '72%' }}>
-                      <div style={{ fontSize: 11, color, fontWeight: 700, marginBottom: 4, textAlign: isMe ? 'right' : 'left' }}>{msg.sailor}</div>
-                      <div style={{ background: isMe ? `${color}18` : 'rgba(255,255,255,.7)', border: isMe ? `1px solid ${color}30` : '1px solid rgba(154,179,202,.2)', borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px', padding: '10px 14px', fontSize: 14, color: '#2c4a5c', lineHeight: 1.55, wordBreak: 'break-word' }}>{msg.text}</div>
+                      <div style={{ fontSize: 11, color, fontWeight: 700, marginBottom: 4, textAlign: isMe ? 'right' : 'left' }}>
+                        {!isMe && me && inRoom
+                          ? <button onClick={() => tag(msg.sailor)} title={t("Tag this sailor")} style={{ background: 'none', border: 'none', padding: 0, color, fontWeight: 700, fontSize: 11, cursor: 'pointer', fontFamily: 'Nunito,sans-serif' }}>{msg.sailor}</button>
+                          : msg.sailor}
+                      </div>
+                      {msg.replyTo && (() => {
+                        const parent = msgs.find(x => x.id === msg.replyTo)
+                        return (
+                          <div style={{ fontSize: 11.5, color: '#7a8a98', background: 'rgba(154,179,202,.14)', borderLeft: '3px solid rgba(154,179,202,.6)', borderRadius: 8, padding: '4px 8px', marginBottom: 4, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            ↪ {parent ? `${parent.sailor}: ${parent.text}` : t("Replying to an earlier message")}
+                          </div>
+                        )
+                      })()}
+                      <div style={{ background: isMe ? `${color}18` : 'rgba(255,255,255,.7)', border: isMe ? `1px solid ${color}30` : '1px solid rgba(154,179,202,.2)', borderRadius: isMe ? '18px 18px 4px 18px' : '18px 18px 18px 4px', padding: '10px 14px', fontSize: 14, color: '#2c4a5c', lineHeight: 1.55, wordBreak: 'break-word' }}>{withTags(msg.text)}</div>
                       <div style={{ fontSize: 10, color: '#9aaab0', marginTop: 4, textAlign: isMe ? 'right' : 'left', display: 'flex', gap: 10, justifyContent: isMe ? 'flex-end' : 'flex-start' }}>
                         <span>{msg.time}</span>
+                        {!isMe && me && inRoom && <button onClick={() => startReply(msg)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 10, color: '#7a9ab0', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Nunito,sans-serif' }}>{t("Reply")}</button>}
                         {!isMe && me && (reported.has(msg.id)
                           ? <span>{t("Reported. Thank you.")}</span>
                           : <button onClick={() => report(msg)} style={{ background: 'none', border: 'none', padding: 0, fontSize: 10, color: '#9aaab0', cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Nunito,sans-serif' }}>{t("Report")}</button>)}
@@ -271,6 +315,12 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
 
             {error && <div role="alert" style={{ padding: '0 20px 8px', fontSize: 12.5, color: '#8a5a5a' }}>{error}</div>}
 
+            {replyTo && inRoom && (
+              <div style={{ margin: '0 16px', padding: '8px 12px', background: 'rgba(154,179,202,.16)', borderRadius: '12px 12px 0 0', display: 'flex', alignItems: 'center', gap: 10, fontSize: 12.5, color: '#4a6a82' }}>
+                <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>↪ {t("Replying to {name}", { name: replyTo.sailor })}: {replyTo.text}</span>
+                <button onClick={() => setReplyTo(null)} aria-label={t("Cancel reply")} style={{ background: 'none', border: 'none', color: '#8aa4b0', cursor: 'pointer', fontSize: 15 }}>✕</button>
+              </div>
+            )}
             <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(154,179,202,.12)', display: 'flex', gap: 10, background: 'rgba(248,243,238,.4)', alignItems: 'center' }}>
               {!me ? (
                 <>
@@ -284,7 +334,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
                 </>
               ) : (
                 <>
-                  <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send() }} placeholder={t("Send a message to your crew…")} maxLength={280}
+                  <input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') send() }} placeholder={t("Send a message to your crew…")} maxLength={280}
                     style={{ flex: 1, background: 'rgba(255,255,255,.75)', border: '1.5px solid rgba(154,179,202,.22)', borderRadius: 50, padding: '10px 20px', fontSize: 14, color: '#2c4a5c', outline: 'none', fontFamily: 'Nunito,sans-serif', transition: 'border-color .2s' }}
                     onFocus={e => { e.target.style.borderColor = 'rgba(154,179,202,.55)' }} onBlur={e => { e.target.style.borderColor = 'rgba(154,179,202,.22)' }} />
                   <button onClick={send} disabled={!input.trim()}

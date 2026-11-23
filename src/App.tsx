@@ -69,6 +69,7 @@ import { pickDaily, useDailyExtras } from './dailyQuests'
 import AuthPage from './AuthPage'
 import AdminPage from './AdminPage'
 import { MyLettersButton } from './MyLetters'
+import { NotificationsButton } from './Notifications'
 import CrewRooms from './CrewRooms'
 import WelcomeSection from './WelcomeSection'
 import GumballMachine from './GumballMachine'
@@ -1796,6 +1797,7 @@ function Nav({ active, destination, user, onLogin, onLogout }:{active:string;des
         <a href="#lighthouse" style={{background:scrolled?'rgba(154,179,202,.18)':'rgba(255,255,255,.2)',color:scrolled?'#3a5a72':'white',padding:'7px 18px',borderRadius:50,textDecoration:'none',fontSize:12,fontWeight:700,border:scrolled?'1px solid rgba(154,179,202,.3)':'1px solid rgba(255,255,255,.38)',letterSpacing:'.06em',textTransform:'uppercase',backdropFilter:'blur(4px)'}}>{t("Get Help")}</a>
         <LanguageToggle style={pill}/>
         {user&&<MyLettersButton uid={user.id} style={pill}/>}
+        {user&&<NotificationsButton uid={user.id} style={pill}/>}
         {user
           ? <button onClick={onLogout} title={t("Log out")} style={pill}>{user.sailor} · {t("Log out")}</button>
           : <button onClick={onLogin} style={pill}>{t("Log in")}</button>}
