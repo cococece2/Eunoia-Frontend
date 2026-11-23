@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from './lib/supabase'
 import { useI18n } from './i18n'
 
-export type NotificationKind = 'reply' | 'mention' | 'message_hidden' | 'moderator_note'
+export type NotificationKind = 'reply' | 'mention' | 'message_hidden' | 'moderator_note' | 'crew_approved' | 'crew_declined'
 
 export type Notice = {
   id: number
@@ -64,6 +64,8 @@ const LOOK: Record<NotificationKind, { icon: string; color: string; bg: string }
   mention:        { icon: '🏷️', color: '#6a5a8a', bg: 'rgba(138,122,154,.18)' },
   message_hidden: { icon: '🙈', color: '#8a5a5a', bg: 'rgba(138,90,90,.10)' },
   moderator_note: { icon: '⚓', color: '#7a6a40', bg: 'rgba(196,154,66,.14)' },
+  crew_approved:  { icon: '🎉', color: '#3e6a55', bg: 'rgba(106,138,120,.16)' },
+  crew_declined:  { icon: '🌊', color: '#7a6a40', bg: 'rgba(196,154,66,.14)' },
 }
 
 function fmtWhen(iso: string) {
@@ -78,6 +80,8 @@ function NoticeItem({ n, isNew, onGo }: { n: Notice; isNew: boolean; onGo: () =>
     n.kind === 'reply' ? t('{name} replied to your message', { name })
     : n.kind === 'mention' ? t('{name} tagged you', { name })
     : n.kind === 'message_hidden' ? t('One of your messages was hidden')
+    : n.kind === 'crew_approved' ? t('Your crew was approved')
+    : n.kind === 'crew_declined' ? t('Your crew was not approved this time')
     : t('A note from the crew moderators')
   const hiddenWhy = t("It didn't fit our crew guidelines: be kind, and keep numbers about weight, calories or sizes out of the chat. Thank you for understanding.")
   return (
@@ -87,6 +91,10 @@ function NoticeItem({ n, isNew, onGo }: { n: Notice; isNew: boolean; onGo: () =>
         {isNew && <span style={{ background: '#c0504d', color: 'white', borderRadius: 50, padding: '2px 8px', fontSize: 10.5, fontWeight: 800, letterSpacing: '.06em', textTransform: 'uppercase' }}>{t('New')}</span>}
         <span style={{ marginLeft: 'auto', fontSize: 11.5, color: '#8a9aaa' }}>{fmtWhen(n.created_at)}</span>
       </div>
+      {(n.kind === 'crew_approved' || n.kind === 'crew_declined') && n.room_name && (
+        <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: '#3a4a5a', fontWeight: 700 }}>{n.room_name}</p>
+      )}
+      {n.kind === 'crew_approved' && <div style={{ marginTop: 6, fontSize: 12.5, color: '#4a6a58' }}>{t('It is live now, and you have joined it. Thank you for building the crew.')}</div>}
       {n.snippet && (
         <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: '#3a4a5a', borderLeft: '3px solid rgba(154,179,202,.5)', paddingLeft: 10, wordBreak: 'break-word' }}>“{n.snippet}”</p>
       )}
@@ -97,7 +105,7 @@ function NoticeItem({ n, isNew, onGo }: { n: Notice; isNew: boolean; onGo: () =>
         </div>
       )}
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 8, flexWrap: 'wrap' }}>
-        {n.room_name && <span style={{ fontSize: 12, color: '#8a9aaa' }}>{t(n.room_name)}</span>}
+        {n.room_name && n.kind !== 'crew_approved' && n.kind !== 'crew_declined' && <span style={{ fontSize: 12, color: '#8a9aaa' }}>{t(n.room_name)}</span>}
         {(n.kind === 'reply' || n.kind === 'mention') && (
           <a href="#chat" onClick={onGo} style={{ fontSize: 12.5, fontWeight: 700, color: '#5a7a92', textDecoration: 'none' }}>{t('Go to the crew chat →')}</a>
         )}

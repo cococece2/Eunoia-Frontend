@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type CSSProperties } from 'react'
 import { supabase } from './lib/supabase'
 import type { LetterStatus } from './MyLetters'
+import { RISKY, RISKY_MESSAGE } from './safety'
 
 // The admin area lives at  <site>/#/admin . It has its own login and only works for
 // accounts listed in the `admins` table (see db/03-letter-review.sql in the backend repo).
@@ -201,17 +202,14 @@ const TRANSLATION_FIELDS = [
 
 // A simple safety net that matches the site's rules: no numbers about weight, food or body size,
 // and nothing about diets, fasting or exercise tips. It cannot catch everything, so still read what you write.
-const RISKY = /\b\d+(\.\d+)?\s?(kg|kgs|lb|lbs|pounds?|kcal|cals?|calories|cm|inch|inches)\b|\b(calorie|calories|kcal|diet|dieting|fasting|purge|purging|weigh|weigh-in|bmi)\b/i
-const RISKY_MESSAGE = 'Please leave out numbers about weight, food or body size, and anything about diets, fasting or exercise tips.'
-
-type Section = 'letters' | 'flagged' | 'daily' | 'bonus'
+type Section = 'letters' | 'flagged' | 'crews' | 'daily' | 'bonus'
 
 function SectionTabs({ section, onChange }: { section: Section; onChange: (s: Section) => void }) {
   const tab = (id: Section, label: string) => (
     <button key={id} onClick={() => onChange(id)} aria-pressed={section === id}
       style={{ ...btn(section === id ? 'white' : 'rgba(255,255,255,.45)', section === id ? '#2c4a5c' : '#5a7a92'), border: `1.5px solid ${section === id ? '#9AB3CA' : 'rgba(154,179,202,.3)'}` }}>{label}</button>
   )
-  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('flagged', 'Flagged messages')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}</nav>
+  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('flagged', 'Flagged messages')}{tab('crews', 'Crew requests')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}</nav>
 }
 
 function TranslationFields({ tr, setTr }: { tr: Record<string, string>; setTr: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
@@ -495,6 +493,92 @@ function FlaggedMessages({ email, onSignOut, switcher }: { email?: string; onSig
   )
 }
 
+// ── Crew requests (chat crews that sailors want to start) ────────────────────
+type CrewRequest = { id: string; name: string; description: string; emoji: string; creator_name: string | null; created_at: string }
+
+function CrewRequestCard({ r, onDecide }: { r: CrewRequest; onDecide: (id: string, decision: 'approve' | 'decline', note: string) => Promise<string | null> }) {
+  const [note, setNote] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  async function go(decision: 'approve' | 'decline') {
+    setBusy(true); setError('')
+    const err = await onDecide(r.id, decision, note)
+    setBusy(false)
+    if (err) setError(err)
+  }
+  const flagged = RISKY.test(r.name) || RISKY.test(r.description)
+  return (
+    <article style={{ ...card, padding: '16px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+        <span style={{ fontSize: 30 }}>{r.emoji}</span>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 17, color: '#2c4a5c', wordBreak: 'break-word' }}>{r.name}</div>
+          <div style={{ fontSize: 12.5, color: '#6a8a98' }}>Asked by <b>{r.creator_name ?? 'a sailor'}</b> · {new Date(r.created_at).toLocaleDateString()}</div>
+        </div>
+      </div>
+      <p style={{ margin: '0 0 12px', fontSize: 14.5, lineHeight: 1.6, background: 'rgba(154,179,202,.12)', borderRadius: 12, padding: '10px 14px', wordBreak: 'break-word' }}>{r.description}</p>
+      {flagged && <div style={{ fontSize: 12.5, color: '#8a5a5a', marginBottom: 10 }}>⚠️ This mentions weight, food or diet words. Look closely before approving.</div>}
+      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase' }}>
+        Note to the sailor (optional)
+        <textarea value={note} onChange={e => setNote(e.target.value)} maxLength={500} rows={2}
+          placeholder="e.g. Love this idea! Or: Thanks, but we already have a crew like this."
+          style={{ ...input, marginTop: 6, resize: 'vertical', fontSize: 14, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+      </label>
+      {error && <div role="alert" style={{ fontSize: 13, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '9px 14px', margin: '10px 0 0' }}>{error}</div>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
+        <button disabled={busy} onClick={() => go('approve')} style={{ ...btn(GOOD), opacity: busy ? 0.6 : 1 }}>Approve crew</button>
+        <button disabled={busy} onClick={() => go('decline')} style={{ ...btn(BAD), opacity: busy ? 0.6 : 1 }}>Decline</button>
+      </div>
+    </article>
+  )
+}
+
+function CrewRequests({ email, onSignOut, switcher }: { email?: string; onSignOut: () => void; switcher: React.ReactNode }) {
+  const [rows, setRows] = useState<CrewRequest[] | null>(null)
+  const [error, setError] = useState('')
+  const [flash, setFlash] = useState('')
+
+  const load = useCallback(async () => {
+    const sb = supabase
+    if (!sb) return
+    setError('')
+    const { data, error } = await sb.rpc('admin_pending_rooms')
+    if (error) { setError(error.message.includes('admin_pending_rooms') ? 'The crew request tools are missing. Run 07-crew-requests.sql in Supabase first.' : error.message); setRows([]); return }
+    setRows((data ?? []) as CrewRequest[])
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  async function decide(id: string, decision: 'approve' | 'decline', note: string) {
+    if (!supabase) return 'Not connected.'
+    const { error } = await supabase.rpc('review_room', { p_room_id: id, p_decision: decision, p_note: note.trim() || null })
+    if (error) return error.message
+    setFlash(decision === 'approve' ? 'Crew approved. It is now live, and the sailor who started it has joined.' : 'Crew declined. The sailor has been notified.')
+    setTimeout(() => setFlash(''), 5000)
+    await load()
+    return null
+  }
+
+  return (
+    <Shell email={email} onSignOut={onSignOut}>
+      {switcher}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+        <h1 className="font-display" style={{ fontSize: 30, fontWeight: 400, margin: 0 }}>Crew requests</h1>
+        <button onClick={load} style={{ ...btn(SOFT, '#3a5a72'), marginLeft: 'auto' }}>↻ Refresh</button>
+      </div>
+      <p style={{ margin: '0 0 18px', fontSize: 14, color: '#6a8a98', lineHeight: 1.6 }}>
+        Sailors can ask to start a new chat crew. Nothing goes live until you approve it. Approved crews appear for everyone, and the sailor who started it joins automatically.
+      </p>
+      {flash && <div role="status" style={{ marginBottom: 14, fontSize: 13.5, color: '#3e6a55', background: 'rgba(106,138,120,.16)', borderRadius: 12, padding: '10px 14px' }}>{flash}</div>}
+      {error && <div role="alert" style={{ marginBottom: 14, fontSize: 13.5, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '10px 14px' }}>{error}</div>}
+      {rows === null
+        ? <p style={{ color: '#6a8a98' }}>Loading…</p>
+        : rows.length === 0
+          ? <div style={{ ...card, padding: '30px 20px', textAlign: 'center', color: '#6a8a98' }}>No crews are waiting. 🌊</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>{rows.map(r => <CrewRequestCard key={r.id} r={r} onDecide={decide} />)}</div>}
+    </Shell>
+  )
+}
+
 // ── Daily tasks (the 6 cards in the quest log) ───────────────────────────────
 type DailyRow = {
   id: number
@@ -717,6 +801,7 @@ function AdminArea({ email, onSignOut }: { email?: string; onSignOut: () => void
   const [section, setSection] = useState<Section>('letters')
   const switcher = <SectionTabs section={section} onChange={setSection} />
   if (section === 'flagged') return <FlaggedMessages email={email} onSignOut={onSignOut} switcher={switcher} />
+  if (section === 'crews') return <CrewRequests email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'daily') return <DailyTasks email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'bonus') return <BonusChallenges email={email} onSignOut={onSignOut} switcher={switcher} />
   return <ReviewQueue email={email} onSignOut={onSignOut} switcher={switcher} />

@@ -1,9 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { supabase } from './lib/supabase'
 import { useI18n } from './i18n'
+import { RISKY } from './safety'
 
 export type ChatUser = { id: string; sailor: string }
-type Room = { id: string; name: string; description: string; emoji: string; members: number }
+type Room = { id: string; name: string; description: string; emoji: string; members: number; pending?: boolean }
 type Msg = { id: string; userId: string | null; sailor: string; text: string; time: string; replyTo: string | null }
 
 const COLORS = ['#7a9ab0', '#6a8a9a', '#8a7a9a', '#6a8a78', '#9a8a6a', '#8a7070', '#7090a8', '#6a7a88']
@@ -58,6 +60,95 @@ const pillBtn = (on: boolean): React.CSSProperties => ({
   fontFamily: 'Nunito,sans-serif', whiteSpace: 'nowrap', transition: 'all .2s',
 })
 
+const CREW_EMOJIS = ['⚓', '🌊', '🐚', '🐬', '🐢', '🌅', '🌙', '⭐', '🎨', '🎵', '📚', '🌱', '🐾', '☕', '💙', '🫶']
+
+function NewCrewModal({ onClose, onDone }: { onClose: () => void; onDone: () => void }) {
+  const { t } = useI18n()
+  const [name, setName] = useState('')
+  const [desc, setDesc] = useState('')
+  const [emoji, setEmoji] = useState('⚓')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
+
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [onClose])
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const nm = name.trim(), ds = desc.trim()
+    if (nm.length < 3) { setError(t('Give your crew a name (at least 3 letters).')); return }
+    if (ds.length < 10) { setError(t('Write a short description (at least 10 letters).')); return }
+    if (RISKY.test(nm) || RISKY.test(ds)) { setError(t('Please leave out numbers about weight, food or body size, and anything about diets or fasting.')); return }
+    const sb = supabase
+    if (!sb) return
+    setBusy(true); setError('')
+    const { error } = await sb.rpc('create_room', { p_name: nm, p_description: ds, p_emoji: emoji })
+    setBusy(false)
+    if (error) {
+      const m = error.message
+      setError(
+        m.includes('already exists') ? t('A crew with that name already exists. Try a different name.')
+        : m.includes('waiting for approval') ? t('You already have 2 crews waiting for approval. Please wait for those first.')
+        : m.includes('few crews today') ? t('You have started a few crews today already. Please try again tomorrow.')
+        : m.includes('create_room') ? t('This is not set up yet. Please try again later.')
+        : t('Could not send your crew. Please try again.'))
+      return
+    }
+    setSent(true)
+    onDone()
+  }
+
+  const field: React.CSSProperties = { width: '100%', boxSizing: 'border-box', border: '1.5px solid rgba(154,179,202,.5)', borderRadius: 14, padding: '10px 14px', fontSize: 14, fontFamily: 'Nunito,sans-serif', background: 'rgba(255,255,255,.9)', color: '#2c4a5c', outline: 'none' }
+  const lbl: React.CSSProperties = { display: 'block', fontSize: 12, fontWeight: 800, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 6 }
+  return (
+    <div className="scroll-modal-wrap" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
+      <div className="animate-fade-in-up" role="dialog" aria-modal="true" aria-label={t('Start a new crew')}
+        style={{ position: 'relative', width: '100%', maxWidth: 480, background: 'linear-gradient(180deg,#f8f3ee 0%,#dfeaeb 100%)', borderRadius: 24, boxShadow: '0 28px 70px rgba(44,74,92,.25)', border: '1.5px solid rgba(154,179,202,.25)', padding: '28px 26px', textAlign: 'left' }}>
+        <button onClick={onClose} aria-label={t('Close')} style={{ position: 'absolute', top: 14, right: 16, background: 'none', border: 'none', fontSize: 20, color: '#8aa4b0', cursor: 'pointer' }}>✕</button>
+        {sent ? (
+          <div style={{ textAlign: 'center', padding: '10px 0' }}>
+            <div style={{ fontSize: 40 }}>{emoji}</div>
+            <h2 className="font-display" style={{ fontSize: 24, fontWeight: 400, color: '#2c4a5c', margin: '10px 0 8px' }}>{t('Thank you! Your crew is on its way.')}</h2>
+            <p style={{ fontSize: 14, color: '#6a8a98', lineHeight: 1.65, margin: '0 0 18px' }}>{t('We check every new crew to keep everyone safe. You will get a notification when it is approved.')}</p>
+            <button onClick={onClose} style={{ ...pillBtn(false), padding: '10px 28px', fontSize: 13 }}>{t('Done')}</button>
+          </div>
+        ) : (
+          <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <h2 className="font-display" style={{ fontSize: 26, fontWeight: 400, color: '#2c4a5c', margin: 0 }}>{t('Start a new crew')}</h2>
+              <p style={{ fontSize: 13, color: '#6a8a98', margin: '6px 0 0', lineHeight: 1.55 }}>{t('A crew is a chat room around something you care about. Every new crew is checked before it appears.')}</p>
+            </div>
+            <label style={lbl}>{t('Crew name')}
+              <input value={name} onChange={e => setName(e.target.value)} maxLength={40} placeholder={t('e.g. Art & Doodles')} style={{ ...field, marginTop: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+            </label>
+            <label style={lbl}>{t('What is it about?')}
+              <textarea value={desc} onChange={e => setDesc(e.target.value)} maxLength={200} rows={3} placeholder={t('e.g. Share what you are drawing, writing or making. All skill levels welcome.')} style={{ ...field, marginTop: 6, resize: 'vertical', textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+            </label>
+            <div>
+              <div style={lbl}>{t('Pick an emoji')}</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {CREW_EMOJIS.map(em => (
+                  <button type="button" key={em} onClick={() => setEmoji(em)} aria-pressed={emoji === em}
+                    style={{ width: 38, height: 38, fontSize: 20, borderRadius: 12, cursor: 'pointer', background: emoji === em ? 'rgba(154,179,202,.35)' : 'rgba(255,255,255,.7)', border: emoji === em ? '2px solid #7a9ab0' : '1.5px solid rgba(154,179,202,.35)' }}>{em}</button>
+                ))}
+              </div>
+            </div>
+            <div style={{ fontSize: 12.5, color: '#5a4020', background: 'rgba(196,154,66,.1)', border: '1px solid rgba(196,154,66,.28)', borderRadius: 12, padding: '9px 12px', lineHeight: 1.55 }}>
+              📌 {t('Crews should be kind and safe. No numbers about weight, calories or sizes, and no diet tips.')}
+            </div>
+            {error && <div role="alert" style={{ fontSize: 13, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '9px 14px' }}>{error}</div>}
+            <button type="submit" disabled={busy} style={{ ...pillBtn(false), padding: '12px 24px', fontSize: 14, opacity: busy ? 0.6 : 1 }}>{busy ? t('Sending…') : t('Send for approval')}</button>
+          </form>
+        )}
+      </div>
+    </div>
+  )
+}
+
 export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
   const { t, tr } = useI18n()
   const demo = !supabase
@@ -72,30 +163,30 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
   const [loading, setLoading] = useState(!demo)
   const [reported, setReported] = useState<Set<string>>(new Set())
   const [replyTo, setReplyTo] = useState<Msg | null>(null)
+  const [creating, setCreating] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const lastSent = useRef(0)
   const idRef = useRef(1000)
   const listRef = useRef<HTMLDivElement>(null)
 
-  // Load the room list
-  useEffect(() => {
+  // Load the room list (also used after you start a crew, to show it as "waiting")
+  const loadRooms = useCallback(() => {
     const sb = supabase
     if (!sb) return
-    let cancelled = false
     sb.from('rooms')
-      .select('id,name,description,emoji,room_members(count)')
+      .select('id,name,description,emoji,status,room_members(count)')
       .order('sort_order')
       .then(({ data, error }: {
-        data: { id: string; name: string; description: string; emoji: string; room_members: { count: number }[] }[] | null
+        data: { id: string; name: string; description: string; emoji: string; status?: string; room_members: { count: number }[] }[] | null
         error: unknown
       }) => {
-        if (cancelled) return
         if (error) setError(t("Could not load the crews. Try refreshing the page."))
-        else setRooms((data ?? []).map((r) => ({ id: r.id, name: r.name, description: r.description, emoji: r.emoji, members: r.room_members?.[0]?.count ?? 0 })))
+        else setRooms((data ?? []).map((r) => ({ id: r.id, name: r.name, description: r.description, emoji: r.emoji, members: r.room_members?.[0]?.count ?? 0, pending: r.status === 'pending' })))
         setLoading(false)
       })
-    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  useEffect(() => { loadRooms() }, [loadRooms])
 
   // Which crews I have joined
   useEffect(() => {
@@ -234,6 +325,11 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
           ) : (
             <button onClick={onLogin} style={{ ...pillBtn(false), padding: '10px 24px', fontSize: 13 }}>{t("Log in to join the conversation")}</button>
           )}
+          {!demo && me && !active && (
+            <div style={{ marginTop: 14 }}>
+              <button onClick={() => setCreating(true)} style={{ ...pillBtn(true), background: 'rgba(255,255,255,.8)', color: '#3a5a72', border: '1.5px solid rgba(154,179,202,.5)', padding: '9px 20px', fontSize: 13 }}>＋ {t("Start a new crew")}</button>
+            </div>
+          )}
         </div>
 
         {!active ? (
@@ -243,7 +339,7 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: 20 }}>
               {rooms.map(room => (
                 <div key={room.id} className="res-card" role="button" tabIndex={0}
-                  onClick={() => setActive(room)} onKeyDown={e => { if (e.key === 'Enter') setActive(room) }}
+                  onClick={() => { if (!room.pending) setActive(room) }} onKeyDown={e => { if (e.key === 'Enter' && !room.pending) setActive(room) }}
                   style={{ background: 'rgba(255,255,255,.72)', borderRadius: 20, padding: 24, backdropFilter: 'blur(8px)', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <span style={{ fontSize: 26 }}>{room.emoji}</span>
@@ -252,15 +348,18 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
                   <div style={{ fontSize: 13, color: '#6a8a98', lineHeight: 1.6, flex: 1 }}>{t(room.description)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#8aa4b0' }}>{t("{n} sailors", { n: room.members })}</span>
-                    <button onClick={e => { e.stopPropagation(); joined.has(room.id) ? setActive(room) : join(room) }} style={pillBtn(joined.has(room.id))}>
-                      {joined.has(room.id) ? t("Open") : t("Join")}
-                    </button>
+                    {room.pending
+                      ? <span style={{ fontSize: 12, fontWeight: 700, color: '#7a6a40', background: 'rgba(196,154,66,.14)', borderRadius: 50, padding: '6px 14px' }}>{t("Waiting for approval")}</span>
+                      : <button onClick={e => { e.stopPropagation(); joined.has(room.id) ? setActive(room) : join(room) }} style={pillBtn(joined.has(room.id))}>
+                          {joined.has(room.id) ? t("Open") : t("Join")}
+                        </button>}
                   </div>
                 </div>
               ))}
             </div>
             {demo && <p style={{ textAlign: 'center', fontSize: 12, color: '#8a9aaa', marginTop: 18 }}>Preview mode: messages stay on this device until login is connected.</p>}
             {error && <p style={{ textAlign: 'center', fontSize: 13, color: '#8a5a5a', marginTop: 14 }}>{error}</p>}
+            {creating && createPortal(<NewCrewModal onClose={() => setCreating(false)} onDone={loadRooms} />, document.body)}
           </>
         ) : (
           <div style={{ background: 'rgba(255,255,255,.65)', border: '1.5px solid rgba(154,179,202,.22)', borderRadius: 24, overflow: 'hidden', backdropFilter: 'blur(12px)', boxShadow: '0 8px 40px rgba(44,74,92,.08)' }}>
