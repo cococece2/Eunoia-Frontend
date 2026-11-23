@@ -143,11 +143,12 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
   async function join(room: Room) {
     setError('')
     const sb = supabase
-    if (!sb) { setJoined(j => new Set(j).add(room.id)); bump(room.id, 1); return }
+    if (!sb) { setJoined(j => new Set(j).add(room.id)); bump(room.id, 1); setActive(a => a ?? room); return }
     if (!user) { onLogin(); return }
     const { error } = await sb.from('room_members').insert({ room_id: room.id, user_id: user.id })
     if (error && error.code !== '23505') { setError(t("Could not join. Please try again.")); return }
     setJoined(j => new Set(j).add(room.id)); bump(room.id, 1)
+    setActive(a => a ?? room)   // go straight into the chat
   }
 
   async function leave(room: Room) {
@@ -251,8 +252,8 @@ export default function CrewRooms({ user, onLogin, decor, waves }: Props) {
                   <div style={{ fontSize: 13, color: '#6a8a98', lineHeight: 1.6, flex: 1 }}>{t(room.description)}</div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: '#8aa4b0' }}>{t("{n} sailors", { n: room.members })}</span>
-                    <button onClick={e => { e.stopPropagation(); joined.has(room.id) ? leave(room) : join(room) }} style={pillBtn(joined.has(room.id))}>
-                      {joined.has(room.id) ? t("Joined ✓") : t("Join")}
+                    <button onClick={e => { e.stopPropagation(); joined.has(room.id) ? setActive(room) : join(room) }} style={pillBtn(joined.has(room.id))}>
+                      {joined.has(room.id) ? t("Open") : t("Join")}
                     </button>
                   </div>
                 </div>
