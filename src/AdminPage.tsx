@@ -204,12 +204,28 @@ const TRANSLATION_FIELDS = [
 const RISKY = /\b\d+(\.\d+)?\s?(kg|kgs|lb|lbs|pounds?|kcal|cals?|calories|cm|inch|inches)\b|\b(calorie|calories|kcal|diet|dieting|fasting|purge|purging|weigh|weigh-in|bmi)\b/i
 const RISKY_MESSAGE = 'Please leave out numbers about weight, food or body size, and anything about diets, fasting or exercise tips.'
 
-function SectionTabs({ section, onChange }: { section: 'letters' | 'bonus'; onChange: (s: 'letters' | 'bonus') => void }) {
-  const tab = (id: 'letters' | 'bonus', label: string) => (
+type Section = 'letters' | 'daily' | 'bonus'
+
+function SectionTabs({ section, onChange }: { section: Section; onChange: (s: Section) => void }) {
+  const tab = (id: Section, label: string) => (
     <button key={id} onClick={() => onChange(id)} aria-pressed={section === id}
       style={{ ...btn(section === id ? 'white' : 'rgba(255,255,255,.45)', section === id ? '#2c4a5c' : '#5a7a92'), border: `1.5px solid ${section === id ? '#9AB3CA' : 'rgba(154,179,202,.3)'}` }}>{label}</button>
   )
-  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('bonus', 'Bonus challenges')}</nav>
+  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}</nav>
+}
+
+function TranslationFields({ tr, setTr }: { tr: Record<string, string>; setTr: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ fontSize: 12.5, color: '#6a8a98', lineHeight: 1.5 }}>Leave a language empty and visitors in that language will see the English text.</div>
+      {TRANSLATION_FIELDS.map(f => (
+        <label key={f.code} style={{ fontSize: 12, fontWeight: 700, color: '#5a7a82' }}>{f.label}
+          <textarea value={tr[f.code] ?? ''} onChange={e => setTr(t => ({ ...t, [f.code]: e.target.value }))} maxLength={300} rows={2}
+            style={{ ...input, marginTop: 4, resize: 'vertical', fontSize: 14, fontWeight: 400 }} />
+        </label>
+      ))}
+    </div>
+  )
 }
 
 function ChallengeForm({ initialBody = '', initialTranslations = {}, saveLabel, onSave, onCancel }: {
@@ -250,17 +266,7 @@ function ChallengeForm({ initialBody = '', initialTranslations = {}, saveLabel, 
       <button type="button" onClick={() => setShowTr(o => !o)} style={{ ...btn('transparent', '#5a7a92'), alignSelf: 'flex-start', padding: '4px 0' }}>
         {showTr ? '− Hide translations' : '+ Add translations (optional)'}
       </button>
-      {showTr && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ fontSize: 12.5, color: '#6a8a98', lineHeight: 1.5 }}>Leave a language empty and visitors in that language will see the English text.</div>
-          {TRANSLATION_FIELDS.map(f => (
-            <label key={f.code} style={{ fontSize: 12, fontWeight: 700, color: '#5a7a82' }}>{f.label}
-              <textarea value={tr[f.code] ?? ''} onChange={e => setTr(t => ({ ...t, [f.code]: e.target.value }))} maxLength={300} rows={2}
-                style={{ ...input, marginTop: 4, resize: 'vertical', fontSize: 14, fontWeight: 400 }} />
-            </label>
-          ))}
-        </div>
-      )}
+      {showTr && <TranslationFields tr={tr} setTr={setTr} />}
       {error && <div role="alert" style={{ fontSize: 13, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '9px 14px' }}>{error}</div>}
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <button type="submit" disabled={busy} style={{ ...btn(GOOD), opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : saveLabel}</button>
@@ -379,12 +385,230 @@ function BonusChallenges({ email, onSignOut, switcher }: { email?: string; onSig
   )
 }
 
+// ── Daily tasks (the 6 cards in the quest log) ───────────────────────────────
+type DailyRow = {
+  id: number
+  category: string
+  body: string
+  xp: number
+  translations: Record<string, string> | null
+  starts_on: string
+  ends_on: string | null
+}
+
+const CATEGORIES = [
+  { id: 'anchor', label: 'Anchor Points' },
+  { id: 'wave', label: 'Wave Riders' },
+  { id: 'crew', label: 'Crew Connection' },
+  { id: 'nourish', label: 'Nourishment Quest' },
+  { id: 'harbor', label: 'Calm Harbor' },
+  { id: 'treasure', label: 'Treasure Hunt' },
+] as const
+
+const XP_CHOICES = [10, 15, 20, 25, 30]
+const dayKey = (offset: number) => new Date(Date.now() + offset * 86400000).toLocaleDateString('en-CA')
+
+function dailyStatus(r: DailyRow): { label: string; live: boolean } {
+  const today = dayKey(0)
+  if (r.ends_on && (r.ends_on <= today || r.ends_on <= r.starts_on)) return { label: 'Hidden', live: false }
+  if (r.starts_on > today) return { label: `Starts ${r.starts_on}`, live: false }
+  if (r.ends_on) return { label: `Ends ${r.ends_on}`, live: true }
+  return { label: 'Live', live: true }
+}
+
+function DailyForm({ initial, saveLabel, onSave, onCancel }: {
+  initial?: DailyRow
+  saveLabel: string
+  onSave: (v: { category: string; body: string; xp: number; translations: Record<string, string> }) => Promise<string | null>
+  onCancel?: () => void
+}) {
+  const [category, setCategory] = useState<string>(initial?.category ?? 'anchor')
+  const [body, setBody] = useState(initial?.body ?? '')
+  const [xp, setXp] = useState(initial?.xp ?? 15)
+  const [tr, setTr] = useState<Record<string, string>>(initial?.translations ?? {})
+  const [showTr, setShowTr] = useState(Object.keys(initial?.translations ?? {}).length > 0)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault()
+    const text = body.trim()
+    if (text.length < 5) { setError('Write at least a few words.'); return }
+    const clean: Record<string, string> = {}
+    for (const f of TRANSLATION_FIELDS) { const v = (tr[f.code] ?? '').trim(); if (v) clean[f.code] = v }
+    if ([text, ...Object.values(clean)].some(v => RISKY.test(v))) { setError(RISKY_MESSAGE); return }
+    setBusy(true); setError('')
+    const err = await onSave({ category, body: text, xp, translations: clean })
+    setBusy(false)
+    if (err) { setError(err); return }
+    if (!onCancel) { setBody(''); setTr({}); setShowTr(false) }
+  }
+
+  const label: CSSProperties = { fontSize: 12, fontWeight: 700, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase' }
+  return (
+    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        <label style={{ ...label, flex: '1 1 200px' }}>Card
+          <select value={category} onChange={e => setCategory(e.target.value)} disabled={!!initial} style={{ ...input, marginTop: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
+            {CATEGORIES.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
+          </select>
+        </label>
+        <label style={{ ...label, flex: '0 1 140px' }}>XP reward
+          <select value={xp} onChange={e => setXp(Number(e.target.value))} style={{ ...input, marginTop: 6, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }}>
+            {XP_CHOICES.map(x => <option key={x} value={x}>{x} XP</option>)}
+          </select>
+        </label>
+      </div>
+      <label style={label}>Task (English)
+        <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={200} rows={2} required
+          placeholder="e.g. Text a friend a song that makes you happy"
+          style={{ ...input, marginTop: 6, resize: 'vertical', fontSize: 14, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+      </label>
+      <div style={{ fontSize: 12, color: '#8a9aaa' }}>{body.trim().length}/200 · Keep it gentle. No numbers (weights, calories, sizes), no diet or exercise tips.</div>
+      <button type="button" onClick={() => setShowTr(o => !o)} style={{ ...btn('transparent', '#5a7a92'), alignSelf: 'flex-start', padding: '4px 0' }}>
+        {showTr ? '− Hide translations' : '+ Add translations (optional)'}
+      </button>
+      {showTr && <TranslationFields tr={tr} setTr={setTr} />}
+      {error && <div role="alert" style={{ fontSize: 13, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '9px 14px' }}>{error}</div>}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <button type="submit" disabled={busy} style={{ ...btn(GOOD), opacity: busy ? 0.6 : 1 }}>{busy ? 'Saving…' : saveLabel}</button>
+        {onCancel && <button type="button" onClick={onCancel} style={btn(SOFT, '#3a5a72')}>Cancel</button>}
+      </div>
+    </form>
+  )
+}
+
+function DailyTasks({ email, onSignOut, switcher }: { email?: string; onSignOut: () => void; switcher: React.ReactNode }) {
+  const [rows, setRows] = useState<DailyRow[] | null>(null)
+  const [editing, setEditing] = useState<number | null>(null)
+  const [error, setError] = useState('')
+  const [flash, setFlash] = useState('')
+
+  const load = useCallback(async () => {
+    const sb = supabase
+    if (!sb) return
+    setError('')
+    const { data, error } = await sb.from('daily_quests')
+      .select('id,category,body,xp,translations,starts_on,ends_on').order('id', { ascending: true })
+    if (error) { setError(error.message.includes('daily_quests') ? 'The daily_quests table is missing. Run 05-daily-quests.sql in Supabase first.' : error.message); setRows([]); return }
+    setRows(data as DailyRow[])
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  function say(msg: string) { setFlash(msg); setTimeout(() => setFlash(''), 5000) }
+
+  async function add(v: { category: string; body: string; xp: number; translations: Record<string, string> }) {
+    if (!supabase) return 'Not connected.'
+    const { error } = await supabase.from('daily_quests').insert({ ...v, starts_on: dayKey(1) })
+    if (error) return error.message
+    say('Added. It joins the rotation tomorrow, so everyone keeps the same list today.')
+    await load()
+    return null
+  }
+  async function save(id: number, v: { category: string; body: string; xp: number; translations: Record<string, string> }) {
+    if (!supabase) return 'Not connected.'
+    const { error } = await supabase.from('daily_quests').update({ body: v.body, xp: v.xp, translations: v.translations }).eq('id', id)
+    if (error) return error.message
+    setEditing(null)
+    say('Saved.')
+    await load()
+    return null
+  }
+  async function hide(r: DailyRow) {
+    if (!supabase) return
+    const end = r.starts_on > dayKey(0) ? r.starts_on : dayKey(1)
+    const { error } = await supabase.from('daily_quests').update({ ends_on: end }).eq('id', r.id)
+    if (error) { setError(error.message); return }
+    say(r.starts_on > dayKey(0) ? 'Hidden. It will not start.' : 'Hidden from tomorrow.')
+    await load()
+  }
+  async function show(r: DailyRow) {
+    if (!supabase) return
+    const { error } = await supabase.from('daily_quests').update({ ends_on: null }).eq('id', r.id)
+    if (error) { setError(error.message); return }
+    say('Showing again.')
+    await load()
+  }
+  async function remove(r: DailyRow) {
+    if (!supabase) return
+    if (!window.confirm('Delete this task for good? Today\'s lists may change for people who are using the site right now. (Hiding it is the safer choice.)')) return
+    const { error } = await supabase.from('daily_quests').delete().eq('id', r.id)
+    if (error) { setError(error.message); return }
+    say('Deleted.')
+    await load()
+  }
+
+  return (
+    <Shell email={email} onSignOut={onSignOut}>
+      {switcher}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+        <h1 className="font-display" style={{ fontSize: 30, fontWeight: 400, margin: 0 }}>Daily tasks</h1>
+        <button onClick={load} style={{ ...btn(SOFT, '#3a5a72'), marginLeft: 'auto' }}>↻ Refresh</button>
+      </div>
+      <p style={{ margin: '0 0 18px', fontSize: 14, color: '#6a8a98', lineHeight: 1.6 }}>
+        Each card on the site shows 3 tasks a day, picked from a pool that rotates by date, so nobody sees the same list two days in a row. Tasks you add here join that pool, along with the ones built into the site.
+        New tasks start <b>tomorrow</b> and hidden ones disappear tomorrow, so everyone keeps the same list all day.
+      </p>
+
+      {flash && <div role="status" style={{ marginBottom: 14, fontSize: 13.5, color: '#3e6a55', background: 'rgba(106,138,120,.16)', borderRadius: 12, padding: '10px 14px' }}>{flash}</div>}
+      {error && <div role="alert" style={{ marginBottom: 14, fontSize: 13.5, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '10px 14px' }}>{error}</div>}
+
+      <section style={{ ...card, padding: '20px 22px', marginBottom: 22 }}>
+        <h2 style={{ fontSize: 16, margin: '0 0 12px' }}>Add a new daily task</h2>
+        <DailyForm saveLabel="Add task" onSave={add} />
+      </section>
+
+      {rows === null
+        ? <p style={{ color: '#6a8a98' }}>Loading…</p>
+        : rows.length === 0
+          ? <div style={{ ...card, padding: '30px 20px', textAlign: 'center', color: '#6a8a98' }}>You haven't added any tasks yet. The site is using its built-in ones.</div>
+          : CATEGORIES.map(c => {
+              const list = rows.filter(r => r.category === c.id)
+              if (list.length === 0) return null
+              return (
+                <section key={c.id} style={{ marginBottom: 20 }}>
+                  <h2 style={{ fontSize: 15, margin: '0 0 10px', color: '#3a5a72' }}>{c.label}</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {list.map(r => {
+                      const st = dailyStatus(r)
+                      return (
+                        <article key={r.id} style={{ ...card, padding: '14px 18px', opacity: st.live ? 1 : 0.65 }}>
+                          {editing === r.id ? (
+                            <DailyForm initial={r} saveLabel="Save changes" onSave={v => save(r.id, v)} onCancel={() => setEditing(null)} />
+                          ) : (
+                            <>
+                              <p style={{ margin: 0, fontSize: 15, lineHeight: 1.6 }}>{r.body}</p>
+                              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: 10 }}>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: st.live ? '#3e6a55' : '#8a5a5a', background: st.live ? 'rgba(106,138,120,.16)' : 'rgba(138,90,90,.1)', borderRadius: 50, padding: '3px 10px' }}>{st.label}</span>
+                                <span style={{ fontSize: 12, color: '#6a8a98' }}>{r.xp} XP</span>
+                                {r.translations && Object.keys(r.translations).length > 0 && <span style={{ fontSize: 12, color: '#6a8a98' }}>Translated: {Object.keys(r.translations).join(', ')}</span>}
+                                <span style={{ marginLeft: 'auto', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                                  <button onClick={() => setEditing(r.id)} style={btn(SOFT, '#3a5a72')}>Edit</button>
+                                  {r.ends_on ? <button onClick={() => show(r)} style={btn(SOFT, '#3a5a72')}>{st.live ? 'Keep showing' : 'Show'}</button>
+                                    : <button onClick={() => hide(r)} style={btn(SOFT, '#3a5a72')}>Hide</button>}
+                                  <button onClick={() => remove(r)} style={btn(BAD)}>Delete</button>
+                                </span>
+                              </div>
+                            </>
+                          )}
+                        </article>
+                      )
+                    })}
+                  </div>
+                </section>
+              )
+            })}
+    </Shell>
+  )
+}
+
 function AdminArea({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
-  const [section, setSection] = useState<'letters' | 'bonus'>('letters')
+  const [section, setSection] = useState<Section>('letters')
   const switcher = <SectionTabs section={section} onChange={setSection} />
-  return section === 'letters'
-    ? <ReviewQueue email={email} onSignOut={onSignOut} switcher={switcher} />
-    : <BonusChallenges email={email} onSignOut={onSignOut} switcher={switcher} />
+  if (section === 'daily') return <DailyTasks email={email} onSignOut={onSignOut} switcher={switcher} />
+  if (section === 'bonus') return <BonusChallenges email={email} onSignOut={onSignOut} switcher={switcher} />
+  return <ReviewQueue email={email} onSignOut={onSignOut} switcher={switcher} />
 }
 
 export default function AdminPage() {

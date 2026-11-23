@@ -65,7 +65,7 @@ import OldPhone from './imports/OldPhone.png'
 import Text from './imports/Text.png'
 import { useAuth, todayKey } from './useAuth'
 import { useUserLetters, WriteLetterButton } from './UserLetters'
-import { pickDaily } from './dailyQuests'
+import { pickDaily, useDailyExtras } from './dailyQuests'
 import AuthPage from './AuthPage'
 import AdminPage from './AdminPage'
 import { MyLettersButton } from './MyLetters'
@@ -151,6 +151,10 @@ const QUEST_CATS = [
     quests:[{id:'c1',text:'Send one kind or honest message to someone you trust',xp:20},{id:'c2',text:'Read a survivor letter from the message bottles',xp:15},{id:'c3',text:"Post a message in the ship's crew chat",xp:15}] },
   { id:'nourish',label:'Nourishment Quest',  icon: <img src={Leaf} alt="Leaf" style={{ width: '60px', height: '30px', verticalAlign: 'middle' }} />, color:'#6a8a78', desc:'Gentle fuel for your voyage.',
     quests:[{id:'n1',text:'Have one full meal sitting down without distractions',xp:30},{id:'n2',text:'Drink 6 glasses of water today',xp:15},{id:'n3',text:'Try something new to eat — even one small bite counts',xp:25}] },
+  { id:'harbor', label:'Calm Harbor', icon: <ArtIcon src={Lantern} alt="Lantern" canvas={[502,274]} bbox={[188,11,313,263]} size={30} />, color:'#7a86a8', desc:'A safe place to rest and soften.',
+    quests:[{id:'h1',text:'Take a warm shower or wash your face slowly, and notice how it feels',xp:15},{id:'h2',text:'Put your phone away for a few minutes and do one calm thing',xp:15},{id:'h3',text:'Get into something cozy and rest, with no goals for the next few minutes',xp:10}] },
+  { id:'treasure', label:'Treasure Hunt', icon: <ArtIcon src={Map} alt="Map" canvas={[537,293]} bbox={[148,51,388,246]} size={30} />, color:'#a08a5a', desc:'Find the small joys along the way.',
+    quests:[{id:'t1',text:'Find one small thing today that makes you smile',xp:10},{id:'t2',text:'Look through photos or memories that make you feel warm',xp:15},{id:'t3',text:'Do something just for fun, with no point or goal',xp:20}] },
 ]
 const ALL_QUESTS = QUEST_CATS.flatMap(c => c.quests)
 const MAX_XP = ALL_QUESTS.reduce((s,q) => s + q.xp, 0)
@@ -1196,7 +1200,8 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
 }
 
 function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void}) {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
+  const extras = useDailyExtras()
   const [completed, setCompleted] = useState<Set<string>>(new Set())
     useEffect(()=>{ if(savedCompleted) setCompleted(new Set(savedCompleted)) },[savedCompleted])
   // New quests every day. If the page is left open past midnight, switch to the new day's list.
@@ -1210,16 +1215,17 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
   const [floats, setFloats] = useState<{id:number;x:number;y:number;val:number}[]>([])
   const [showConfetti, setShowConfetti] = useState(false)
   const fid = useRef(0)
-  const cats = pickDaily(day, QUEST_CATS)
-  const total = cats.reduce((s,c)=>s+c.quests.length,0)
-  const allDone = completed.size===total
+  const cats = pickDaily(day, QUEST_CATS, extras)
+  // 'done' only counts quests that are on screen today, so a changed list can never confuse it
+  const everyDone = (set:Set<string>) => cats.every(c=>c.quests.every(q=>set.has(q.id)))
+  const allDone = everyDone(completed)
 
   function toggle(qid:string, xp:number, el:HTMLElement|null) {
     if(completed.has(qid)) return
     const next=new Set(completed); next.add(qid)
         setCompleted(next); onXP(xp); onCompletedChange?.([...next],xp)
     if(el){ const r=el.getBoundingClientRect(),pr=el.closest('section')!.getBoundingClientRect(); setFloats(f=>[...f,{id:fid.current++,x:r.right-pr.left,y:r.top-pr.top,val:xp}]); setTimeout(()=>setFloats(f=>f.slice(1)),1000) }
-    if(next.size===total){ setTimeout(()=>setShowConfetti(true),200); setTimeout(()=>setShowConfetti(false),3000) }
+    if(everyDone(next)){ setTimeout(()=>setShowConfetti(true),200); setTimeout(()=>setShowConfetti(false),3000) }
   }
 
   const lv=xpLevel(totalXP); const pct=Math.min(100,(totalXP/MAX_XP)*100)
@@ -1270,7 +1276,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
                         {done&&<span className="animate-check-pop" style={{color:'white',fontSize:14,fontWeight:700}}>✓</span>}
                       </div>
                       <div style={{flex:1}}>
-                        <div style={{fontSize:14,color:done?'#8a9a98':'#2c4a5c',textDecoration:done?'line-through':'none',lineHeight:1.5,transition:'color .3s'}}>{t(q.text)}</div>
+                        <div style={{fontSize:14,color:done?'#8a9a98':'#2c4a5c',textDecoration:done?'line-through':'none',lineHeight:1.5,transition:'color .3s'}}>{q.translations?.[lang] || t(q.text)}</div>
                         <div style={{fontSize:11,fontWeight:700,color:done?'#9aaab0':cat.color,marginTop:3}}>{t("+{xp} XP · +{xp} Gold Anchors",{xp:q.xp})} 
                         <span style={{marginLeft:4,verticalAlign:'middle',display:'inline-block',lineHeight:0}}><ArtIcon src={AnchorImage} alt="Anchor" canvas={[447,244]} bbox={[130,3,316,240]} size={14} /></span>
                         </div>

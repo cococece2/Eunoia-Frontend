@@ -6,7 +6,40 @@
 // To add your own quests: add a line to the right category below. Keep ids unique (a10, w10, ...).
 // Tip for this community: leave out numbers, calories, weights and anything about "burning off" food.
 
-type Quest = { id: string; text: string; xp: number }
+import { useEffect, useState } from 'react'
+import { supabase } from './lib/supabase'
+
+export type Quest = { id: string; text: string; xp: number; translations?: Record<string, string> | null }
+
+/** A quest added on the admin page (#/admin → Daily tasks). It joins the rotation on its start day. */
+export type DailyExtra = {
+  id: number
+  category: string
+  body: string
+  xp: number
+  translations: Record<string, string> | null
+  starts_on: string      // first day it can appear, "YYYY-MM-DD"
+  ends_on: string | null // first day it no longer appears (empty = keeps going)
+}
+
+/** Quests added on the admin page. Empty until they load (or when the database is not connected). */
+export function useDailyExtras(): DailyExtra[] {
+  const [rows, setRows] = useState<DailyExtra[]>([])
+  useEffect(() => {
+    const sb = supabase
+    if (!sb) return
+    let cancelled = false
+    sb.from('daily_quests')
+      .select('id,category,body,xp,translations,starts_on,ends_on')
+      .order('id', { ascending: true })
+      .then(({ data, error }: { data: DailyExtra[] | null; error: unknown }) => {
+        if (cancelled || error || !data) return
+        setRows(data)
+      })
+    return () => { cancelled = true }
+  }, [])
+  return rows
+}
 
 export const EXTRA_QUESTS: Record<string, Quest[]> = {
   // Anchor Points: grounding and self-kindness
@@ -44,6 +77,24 @@ export const EXTRA_QUESTS: Record<string, Quest[]> = {
     { id: 'n7', text: 'Share a meal or snack with someone you feel safe around', xp: 30 },
     { id: 'n8', text: 'Have a warm drink and enjoy it slowly', xp: 10 },
     { id: 'n9', text: 'Think of a food you are looking forward to this week', xp: 15 },
+  ],
+  // Calm Harbor: rest and softness
+  harbor: [
+    { id: 'h4', text: 'Listen to calming sounds or music with your eyes closed', xp: 10 },
+    { id: 'h5', text: 'Tidy one small corner of your space and enjoy how it feels', xp: 15 },
+    { id: 'h6', text: 'Write down one worry, then set it aside until tomorrow', xp: 20 },
+    { id: 'h7', text: 'Wrap yourself in a blanket and breathe slowly', xp: 10 },
+    { id: 'h8', text: 'Wind down tonight with something gentle, like a book or soft music', xp: 20 },
+    { id: 'h9', text: 'Look at the sky for a minute and let your thoughts drift by like clouds', xp: 15 },
+  ],
+  // Treasure Hunt: small joys, play and curiosity
+  treasure: [
+    { id: 't4', text: 'Learn one tiny new thing about something you are curious about', xp: 20 },
+    { id: 't5', text: 'Watch or read something that makes you laugh', xp: 15 },
+    { id: 't6', text: 'Notice something you like: a color, a sound, or a smell', xp: 10 },
+    { id: 't7', text: 'Make a list of small things you are looking forward to', xp: 20 },
+    { id: 't8', text: 'Share something you love with someone else', xp: 20 },
+    { id: 't9', text: 'Play a game, solve a puzzle, or try something playful', xp: 15 },
   ],
 }
 
@@ -106,11 +157,21 @@ function dealt<Q extends Quest>(pool: Q[], n: number, catId: string, dayNum: num
   return order.slice(pos * n, pos * n + n)
 }
 
-/** Returns your categories with the day's quests swapped in. Everything else (icons, colors) stays yours. */
-export function pickDaily<C extends { id: string; quests: Quest[] }>(day: string, cats: C[]): C[] {
+/** The quests added on the admin page that are live on a given day. */
+function extrasFor(day: string, catId: string, extras: DailyExtra[]): Quest[] {
+  return extras
+    .filter(e => e.category === catId && e.starts_on <= day && (!e.ends_on || e.ends_on > day))
+    .map(e => ({ id: `d${e.id}`, text: e.body, xp: e.xp, translations: e.translations }))
+}
+
+/**
+ * Returns your categories with the day's quests swapped in. Everything else (icons, colors) stays yours.
+ * The pool is: the 3 quests in App.tsx + the extras above + any added on the admin page that are live that day.
+ */
+export function pickDaily<C extends { id: string; quests: Quest[] }>(day: string, cats: C[], extras: DailyExtra[] = []): (Omit<C, 'quests'> & { quests: Quest[] })[] {
   const dayNum = dayNumber(day)
   return cats.map(cat => {
-    const pool = [...cat.quests, ...(EXTRA_QUESTS[cat.id] ?? [])]
+    const pool: Quest[] = [...cat.quests, ...(EXTRA_QUESTS[cat.id] ?? []), ...extrasFor(day, cat.id, extras)]
     return { ...cat, quests: dealt(pool, cat.quests.length, cat.id, dayNum) }
   })
 }
