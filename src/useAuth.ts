@@ -11,6 +11,9 @@ export type Profile = {
   quests_day: string | null   // the (local) date those quests belong to, e.g. "2026-11-04"
 }
 
+// Where the boat is sailing: the chosen destination, and the lifetime XP the voyage began at.
+export type Voyage = { destination: string | null; start: number }
+
 export type AuthResult = { error?: string; needsConfirm?: boolean }
 
 // Today's date on the person's own device, as YYYY-MM-DD. Daily quests reset when this changes.
@@ -26,6 +29,7 @@ function friendly(message: string) {
 export function useAuth() {
   const [session, setSession] = useState<AuthSession | null>(null)
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [voyage, setVoyage] = useState<Voyage | null>(null)
 
   useEffect(() => {
     const sb = supabase
@@ -46,6 +50,27 @@ export function useAuth() {
       .eq('id', uid)
       .single()
       .then(({ data }: { data: Profile | null }) => { if (!cancelled && data) setProfile(data) })
+    return () => { cancelled = true }
+  }, [uid])
+
+  // The voyage is loaded on its own, so that login keeps working even before 08-voyage.sql has been run.
+  // It is also kept on this device as a backup.
+  useEffect(() => {
+    const sb = supabase
+    if (!sb || !uid) { setVoyage(null); return }
+    let cancelled = false
+    const local = (): Voyage | null => {
+      try { const v = JSON.parse(localStorage.getItem(`voyage-${uid}`) ?? 'null'); return v && typeof v.start === 'number' ? v : null } catch { return null }
+    }
+    sb.from('profiles')
+      .select('destination,voyage_start_xp')
+      .eq('id', uid)
+      .single()
+      .then(({ data, error }: { data: { destination: string | null; voyage_start_xp: number } | null; error: unknown }) => {
+        if (cancelled) return
+        if (!error && data && data.destination) setVoyage({ destination: data.destination, start: data.voyage_start_xp ?? 0 })
+        else setVoyage(local())
+      })
     return () => { cancelled = true }
   }, [uid])
 
@@ -74,8 +99,17 @@ export function useAuth() {
     await supabase.from('profiles').update({ total_xp: xp, completed_quests: completed, quests_day: day }).eq('id', uid)
   }, [uid])
 
+  const saveVoyage = useCallback(async (destination: string, start: number) => {
+    if (!uid) return
+    try { localStorage.setItem(`voyage-${uid}`, JSON.stringify({ destination, start })) } catch { /* private mode */ }
+    if (!supabase) return
+    await supabase.from('profiles').update({ destination, voyage_start_xp: start }).eq('id', uid)   // ignored if the columns are not there yet
+  }, [uid])
+
   return {
     enabled: !!supabase,
+    voyage,
+    saveVoyage,
     profile,
     user: profile ? { id: profile.id, sailor: profile.sailor_name } : null,
     signIn,

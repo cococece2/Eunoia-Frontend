@@ -70,6 +70,8 @@ import AuthPage from './AuthPage'
 import AdminPage from './AdminPage'
 import { MyLettersButton } from './MyLetters'
 import { NotificationsButton } from './Notifications'
+import { VoyagePanel, VoyageMap } from './Voyage'
+import { routeInfo, NM_PER_XP, daysAtSteadyPace } from './sailing'
 import CrewRooms from './CrewRooms'
 import WelcomeSection from './WelcomeSection'
 import GumballMachine from './GumballMachine'
@@ -107,38 +109,17 @@ function SmallFlag({ flag, size, fit = 'contain' }: { flag: ReactNode; size: num
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const MAP_W = 900, MAP_H = 460, HOME_X = 350, HOME_Y = 128;
-function toXY(lon: number, lat: number) {
-  return { x: (lon + 180) / 360 * MAP_W, y: (90 - lat) / 180 * MAP_H }
-}
-
 const DESTINATIONS = [
-  { id:'paris',       label:'Paris',        flag:<img src={EiffelTower} alt="Eiffel Tower" />, lon:2.3,   lat:48.9,  tagline:'Where you rediscover the joy of being alive',    color:'#e8ecf2', accent:'#7a8fa8', seas:'North Atlantic', dist:'3,628 nm',  days:'23 days', vibe:'Cafés and golden light' },
-  { id:'kyoto',       label:'Kyoto',        flag:<img src={Kyoto} alt="Kyoto"  />, lon:135.8, lat:35.0,  tagline:'Ancient gardens where stillness becomes strength', color:'#f0ece8', accent:'#9a8070', seas:'Pacific Ocean',  dist:'11,204 nm', days:'71 days', vibe:'Cherry blossoms & peace' },
-  { id:'santorini',   label:'Santorini',    flag:<img src={Santorini} alt="Santorini" />, lon:25.4,  lat:36.4,  tagline:'White cliffs, blue domes — sea meets sky',         color:'#e4ecf4', accent:'#6a8aaa', seas:'Mediterranean',  dist:'2,185 nm',  days:'14 days', vibe:'Sunsets and open sky' },
-  { id:'bali',        label:'Bali',         flag:<img src={Bali} alt="Bali" />, lon:115.2, lat:-8.7,  tagline:'Island of healing where nature restores',          color:'#e8f0ea', accent:'#6a9070', seas:'Indian Ocean',   dist:'8,432 nm',  days:'54 days', vibe:'Rice terraces & warmth' },
-  { id:'canada',      label:'Canada',       flag:<img src={Canada} alt="Canada" />, lon:-21.8, lat:64.1,  tagline:'Where the dark sky dances with color',             color:'#eae8f2', accent:'#8080a8', seas:'North Atlantic', dist:'1,680 nm',  days:'11 days', vibe:'Northern lights & hot springs' },
-  { id:'maldives',    label:'Maldives',     flag:<img src={Maldives} alt='Maldives' />, lon:73.0,  lat:3.2,   tagline:'Crystal waters where peace lives',                 color:'#e2eef2', accent:'#5a8a98', seas:'Indian Ocean',   dist:'7,910 nm',  days:'50 days', vibe:'Turquoise & tranquility' },
-  { id:'machupicchu', label:'Machu Picchu', flag:<img src={MachuPicchu} alt='Machu Picchu' />, lon:-72.5, lat:-13.2, tagline:'Above the clouds — see how far you have come',     color:'#eeeae0', accent:'#8a7a50', seas:'South Atlantic',dist:'6,240 nm',  days:'40 days', vibe:'Mist, mountains & wonder' },
-  { id:'hawaii',      label:'Hawaii',       flag:<img src={Hawaii} alt='Hawaii' />, lon:18.4,  lat:-33.9, tagline:"Where two oceans meet and stories begin again",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
-  { id:'rome',        label:'Rome',         flag:<img src={Rome} alt='Rome' />, lon:18.4,  lat:-33.9, tagline:"Where you travel back in time",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
-  { id:'antarctica',  label:'Antarctica',   flag:<img src={Antarctica} alt='Antarctica' />, lon:18.4,  lat:-33.9, tagline:"Where the wisps of snow tickle your face",     color:'#f0e8e8', accent:'#9a6868', seas:'South Atlantic',dist:'6,820 nm',  days:'44 days', vibe:'Winelands & wild coast' },
-]
-
-const CONTINENTS = [
-  'M55,42 L120,32 L175,38 L225,55 L260,78 L290,95 L300,125 L290,155 L275,185 L255,210 L225,240 L185,255 L155,248 L115,228 L80,205 L58,175 L42,145 L40,105 L45,72 Z',
-  'M215,18 L268,14 L290,28 L288,48 L262,56 L228,54 L210,40 Z',
-  'M160,252 L200,246 L242,255 L265,280 L280,320 L278,370 L258,415 L222,428 L182,415 L162,380 L150,340 L148,295 L152,268 Z',
-  'M375,65 L390,58 L415,55 L442,60 L462,72 L468,90 L460,108 L440,118 L415,122 L392,115 L375,100 L368,82 Z',
-  'M375,130 L450,120 L498,135 L515,162 L512,205 L500,260 L480,308 L455,342 L420,358 L385,348 L362,318 L350,278 L352,232 L360,185 L366,155 Z',
-  'M450,62 L520,50 L625,42 L725,48 L808,65 L840,90 L838,120 L820,145 L790,162 L740,172 L680,178 L618,182 L555,178 L498,168 L472,148 L458,120 L448,90 Z',
-  'M618,182 L660,185 L700,195 L740,210 L720,228 L680,225 L630,212 L608,198 Z',
-  'M650,268 L728,258 L782,268 L800,298 L798,335 L775,358 L738,365 L695,362 L658,345 L638,310 L640,282 Z',
-  'M0,432 L900,432 L900,460 L0,460 Z',
-]
-const OCEAN_LABELS = [
-  { x:195,y:210,text:'Atlantic Ocean' }, { x:700,y:290,text:'Pacific Ocean' },
-  { x:620,y:245,text:'Indian Ocean' },   { x:450,y:445,text:'Southern Ocean' },
+  { id:'paris',       label:'Paris',        flag:<img src={EiffelTower} alt="Eiffel Tower" />, lon:2.35, lat:48.86,  tagline:'Where you rediscover the joy of being alive',    color:'#e8ecf2', accent:'#7a8fa8', seas:'North Atlantic', vibe:'Cafés and golden light' },
+  { id:'kyoto',       label:'Kyoto',        flag:<img src={Kyoto} alt="Kyoto"  />, lon:135.77, lat:35.01,  tagline:'Ancient gardens where stillness becomes strength', color:'#f0ece8', accent:'#9a8070', seas:'Pacific Ocean', vibe:'Cherry blossoms & peace' },
+  { id:'santorini',   label:'Santorini',    flag:<img src={Santorini} alt="Santorini" />, lon:25.43, lat:36.39,  tagline:'White cliffs, blue domes — sea meets sky',         color:'#e4ecf4', accent:'#6a8aaa', seas:'Mediterranean', vibe:'Sunsets and open sky' },
+  { id:'bali',        label:'Bali',         flag:<img src={Bali} alt="Bali" />, lon:115.26, lat:-8.51,  tagline:'Island of healing where nature restores',          color:'#e8f0ea', accent:'#6a9070', seas:'Indian Ocean', vibe:'Rice terraces & warmth' },
+  { id:'canada',      label:'Canada',       flag:<img src={Canada} alt="Canada" />, lon:-94.17, lat:58.77,  tagline:'Where the dark sky dances with color',             color:'#eae8f2', accent:'#8080a8', seas:'Hudson Bay', vibe:'Northern lights & wild coasts' },
+  { id:'maldives',    label:'Maldives',     flag:<img src={Maldives} alt='Maldives' />, lon:73.51, lat:4.18,   tagline:'Crystal waters where peace lives',                 color:'#e2eef2', accent:'#5a8a98', seas:'Indian Ocean', vibe:'Turquoise & tranquility' },
+  { id:'machupicchu', label:'Machu Picchu', flag:<img src={MachuPicchu} alt='Machu Picchu' />, lon:-72.55, lat:-13.16, tagline:'Above the clouds — see how far you have come',     color:'#eeeae0', accent:'#8a7a50', seas:'Pacific Ocean', vibe:'Mist, mountains & wonder' },
+  { id:'hawaii',      label:'Hawaii',       flag:<img src={Hawaii} alt='Hawaii' />, lon:-157.83, lat:21.28, tagline:"Warm waves, green volcanoes and the spirit of aloha",     color:'#f0e8e8', accent:'#9a6868', seas:'Pacific Ocean', vibe:'Volcanoes & warm waves' },
+  { id:'rome',        label:'Rome',         flag:<img src={Rome} alt='Rome' />, lon:12.5, lat:41.9, tagline:"Where you travel back in time",     color:'#f0e8e8', accent:'#9a6868', seas:'Mediterranean', vibe:'Ancient streets & gelato' },
+  { id:'antarctica',  label:'Antarctica',   flag:<img src={Antarctica} alt='Antarctica' />, lon:-63.49, lat:-64.82, tagline:"Where the wisps of snow tickle your face",     color:'#f0e8e8', accent:'#9a6868', seas:'Southern Ocean', vibe:'Ice, silence & penguins' },
 ]
 
 // ── Quest data ────────────────────────────────────────────────────────────────
@@ -602,61 +583,6 @@ function LighthouseSVG() {
       <rect x="35" y="55" width="10" height="12" rx="5" fill="#C6DDED" opacity=".7"/>
       <rect x="35" y="90" width="10" height="12" rx="5" fill="#C6DDED" opacity=".7"/>
     </svg>
-  )
-}
-
-// ── World Map ─────────────────────────────────────────────────────────────────
-
-function WorldMap({ destId }:{destId:string|null}) {
-  const dest = DESTINATIONS.find(d=>d.id===destId)
-  const dp = dest ? toXY(dest.lon, dest.lat) : null
-  const routePath = dp ? `M ${HOME_X} ${HOME_Y} Q ${(HOME_X+dp.x)/2} ${(HOME_Y+dp.y)/2-48} ${dp.x} ${dp.y}` : ''
-  return (
-    <div style={{borderRadius:20,overflow:'hidden',background:'linear-gradient(180deg,#C6DDED,#9AB3CA)',border:'1.5px solid rgba(154,179,202,.4)',boxShadow:'inset 0 0 50px rgba(44,74,92,.1)'}}>
-      <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} width="100%" style={{display:'block'}}>
-        <defs>
-          <linearGradient id="ocean-bg" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#C6DDED"/><stop offset="100%" stopColor="#9AB3CA"/>
-          </linearGradient>
-          <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#dfeaeb" stopOpacity=".7"/><stop offset="100%" stopColor="#C6DDED" stopOpacity=".8"/>
-          </linearGradient>
-        </defs>
-        <rect width={MAP_W} height={MAP_H} fill="url(#ocean-bg)"/>
-        {[72,145,218,290,362].map(y=><line key={y} x1="0" y1={y} x2={MAP_W} y2={y} stroke="rgba(255,255,255,.3)" strokeWidth=".8"/>)}
-        {[150,225,300,375,450,525,600,675,750,825].map(x=><line key={x} x1={x} y1="0" x2={x} y2={MAP_H} stroke="rgba(255,255,255,.3)" strokeWidth=".8"/>)}
-        {CONTINENTS.map((d,i)=><path key={i} d={d} fill="url(#land)" stroke="rgba(255,255,255,.45)" strokeWidth="1"/>)}
-        {OCEAN_LABELS.map((l,i)=><text key={i} x={l.x} y={l.y} fill="rgba(44,74,92,.4)" fontSize="11" fontFamily="Nunito,sans-serif" fontStyle="italic" textAnchor="middle">{l.text}</text>)}
-        {DESTINATIONS.map(d=>{
-          const pt=toXY(d.lon,d.lat); const sel=d.id===destId
-          return <g key={d.id}>{!sel&&<><circle cx={pt.x} cy={pt.y} r="4.5" fill={d.accent} opacity=".7"/><text x={pt.x} y={pt.y-8} fill={d.accent} fontSize="11" textAnchor="middle">{d.flag}</text></>}</g>
-        })}
-        {dp&&<path d={routePath} fill="none" stroke="#9a7060" strokeWidth="2.5" strokeLinecap="round" pathLength={1} style={{strokeDasharray:'1',strokeDashoffset:'1',animation:'draw-route 2.2s ease-out forwards'}}/>}
-        <g transform={`translate(${HOME_X-12},${HOME_Y-16})`}>
-          <circle cx="12" cy="20" r="12" fill="white" opacity=".85"/>
-          <text x="12" y="25" textAnchor="middle" fontSize="14"><image href={Boat} x="4" y="13" width="16" height="16" /></text>
-        </g>
-        <text x={HOME_X} y={HOME_Y+18} fill="#2c4a5c" fontSize="10" textAnchor="middle" fontFamily="Nunito,sans-serif" fontWeight="700">YOU ARE HERE</text>
-        {dp&&dest&&(
-          <g className="map-pin">
-            <circle cx={dp.x} cy={dp.y} r="18" fill={dest.accent} opacity=".12"/>
-            <circle cx={dp.x} cy={dp.y} r="10" fill={dest.accent} opacity=".85"/>
-            <text x={dp.x} y={dp.y+5} textAnchor="middle" fontSize="11">{dest.flag}</text>
-            <text x={dp.x} y={dp.y+26} fill="#2c4a5c" fontSize="11" textAnchor="middle" fontFamily="Nunito,sans-serif" fontWeight="700">{dest.label}</text>
-          </g>
-        )}
-      </svg>
-      {dest&&(
-        <div style={{padding:'16px 24px',background:'rgba(248,243,238,.9)',borderTop:'1px solid rgba(154,179,202,.2)',display:'flex',flexWrap:'wrap'}}>
-          {[{icon: <img src={Map} alt="Map" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />, label:'Distance',val:dest.dist},{icon: <img src={Boat} alt="Boat" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />,label:'Sailing time',val:dest.days},{icon: <img src={Shimmer} alt="Map" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />,label:'Seas',val:dest.seas},{icon: <img src={Wave2} alt="Map" style={{ width: '16px', height: '16px', verticalAlign: 'middle' }} />,label:'Vibe',val:dest.vibe}].map((s,i)=>(
-            <div key={i} style={{flex:'1 1 130px',padding:'6px 16px',borderRight:i<3?'1px solid rgba(154,179,202,.18)':'none'}}>
-              <div style={{fontSize:12,color:'#6a8a98',marginBottom:3}}>{s.icon} {s.label}</div>
-              <div style={{fontSize:13,fontWeight:700,color:'#2c4a5c'}}>{s.val}</div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -1161,10 +1087,20 @@ function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:str
   )
 }
 
-function DestinationSection({ selected, onSelect }:{selected:string|null;onSelect:(id:string)=>void}) {
+function DestinationSection({ selected, onSelect, progressXp, loggedIn }:{selected:string|null;onSelect:(id:string)=>void;progressXp:number;loggedIn:boolean}) {
   const { t } = useI18n()
   const [showMap, setShowMap] = useState(false)
   useEffect(()=>{ if(selected) setShowMap(true) },[selected])
+  // Choosing a new place restarts the voyage, so ask first if the boat has already sailed somewhere
+  const pick = (id:string) => {
+    if(selected && selected!==id && progressXp>0 && !window.confirm(t("Change destination? Your boat will start the new voyage from the beginning."))) return
+    onSelect(id)
+  }
+  const voyageDests = DESTINATIONS.map(d=>({ id:d.id, label:d.label, lon:d.lon, lat:d.lat, accent:d.accent, flag:<SmallFlag flag={d.flag} size={34} fit="cover"/> }))
+  const selDest = voyageDests.find(d=>d.id===selected) ?? null
+  const info = selDest ? routeInfo(selDest.id) : null
+  const sailedNm = progressXp * NM_PER_XP
+  const nf = (n:number)=>Math.round(n).toLocaleString()
   return (
     <section id="destination" style={{position:'relative',background:'linear-gradient(180deg,#dfeaeb 0%,#C6DDED 55%,#9AB3CA 100%)',padding:'100px 24px 130px',overflow:'hidden'}}>
       <OceanLife/>
@@ -1176,7 +1112,7 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(188px,1fr))',gap:14,marginBottom:48}}>
           {DESTINATIONS.map(d=>(
-            <div key={d.id} className={`dest-card ${selected===d.id?'chosen':''}`} style={{background:selected===d.id?d.color:'rgba(248,243,238,.75)',borderRadius:20,padding:'22px 18px',textAlign:'center',backdropFilter:'blur(8px)'}} onClick={()=>onSelect(d.id)} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==='Enter')onSelect(d.id)}}>
+            <div key={d.id} className={`dest-card ${selected===d.id?'chosen':''}`} style={{background:selected===d.id?d.color:'rgba(248,243,238,.75)',borderRadius:20,padding:'22px 18px',textAlign:'center',backdropFilter:'blur(8px)'}} onClick={()=>pick(d.id)} role="button" tabIndex={0} onKeyDown={e=>{if(e.key==='Enter')onSelect(d.id)}}>
               <div style={{fontSize:34,marginBottom:10}}>{d.flag}</div>
               <div style={{fontWeight:700,fontSize:15,color:'#2c4a5c',marginBottom:6}}>{t(d.label)}</div>
               <div style={{fontSize:12,color:'#6a8a98',lineHeight:1.5}}>{t(d.tagline)}</div>
@@ -1186,12 +1122,31 @@ function DestinationSection({ selected, onSelect }:{selected:string|null;onSelec
             </div>
           ))}
         </div>
-        {showMap&&(
+        {showMap&&selDest&&info&&(
           <div className="animate-fade-in-up">
             <div style={{fontSize:12,fontWeight:700,color:'#4a6a82',letterSpacing:'.08em',textTransform:'uppercase',marginBottom:16,display:'flex',alignItems:'center',gap:8}}>
+              <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/> {t("Your eagle-eye view")} <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/>
+            </div>
+            <VoyagePanel key={selDest.id} dest={selDest} sailedNm={sailedNm} loggedIn={loggedIn}/>
+            <div style={{fontSize:12,fontWeight:700,color:'#4a6a82',letterSpacing:'.08em',textTransform:'uppercase',margin:'44px 0 16px',display:'flex',alignItems:'center',gap:8}}>
               <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/> {t("Your voyage map")} <span style={{flex:1,height:1,background:'rgba(74,106,130,.25)',display:'block'}}/>
             </div>
-            <WorldMap destId={selected}/>
+            <div style={{borderRadius:20,overflow:'hidden',border:'1.5px solid rgba(154,179,202,.4)',boxShadow:'inset 0 0 50px rgba(44,74,92,.1)'}}>
+              <VoyageMap dest={selDest} sailedNm={sailedNm} all={voyageDests}/>
+              <div style={{padding:'16px 24px',background:'rgba(248,243,238,.9)',borderTop:'1px solid rgba(154,179,202,.2)',display:'flex',flexWrap:'wrap'}}>
+                {(()=>{ const d=DESTINATIONS.find(x=>x.id===selDest.id)!; return [
+                  {icon:<img src={Map} alt="" style={{width:'16px',height:'16px',verticalAlign:'middle'}}/>,label:t('Distance'),val:t('{n} nm',{n:nf(info.total)})},
+                  {icon:<img src={Boat} alt="" style={{width:'16px',height:'16px',verticalAlign:'middle'}}/>,label:t('Sailing time'),val:t('about {n} days',{n:daysAtSteadyPace(info)})},
+                  {icon:<img src={Shimmer} alt="" style={{width:'16px',height:'16px',verticalAlign:'middle'}}/>,label:t('Seas'),val:t(d.seas)},
+                  {icon:<img src={Wave2} alt="" style={{width:'16px',height:'16px',verticalAlign:'middle'}}/>,label:t('Vibe'),val:t(d.vibe)},
+                ] })().map((st,i)=>(
+                  <div key={i} style={{flex:'1 1 130px',padding:'6px 16px',borderRight:i<3?'1px solid rgba(154,179,202,.18)':'none'}}>
+                    <div style={{fontSize:12,color:'#6a8a98',marginBottom:3}}>{st.icon} {st.label}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:'#2c4a5c'}}>{st.val}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -1825,6 +1780,7 @@ function MainSite() {
   const [activeSection, setActiveSection] = useState('hero')
   const [journeyStarted, setJourneyStarted] = useState(false)
   const [destination, setDestination] = useState<string|null>(null)
+  const [voyageStart, setVoyageStart] = useState(0)   // lifetime XP when this voyage began
   const [totalXP, setTotalXP] = useState(0)
   const [myName]  = useState(()=>genSailor())
   const [myColor] = useState(()=>SAILOR_COLORS[Math.floor(Math.random()*SAILOR_COLORS.length)])
@@ -1840,8 +1796,23 @@ function MainSite() {
   // When someone logs in, load their saved progress. When they log out, reset to a fresh voyage.
   useEffect(()=>{
     if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests : []); setDoneToday(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests.length : 0) }
-    else { setTotalXP(0); setSavedCompleted([]); setDoneToday(0) }
+    else { setTotalXP(0); setSavedCompleted([]); setDoneToday(0); setVoyageStart(0) }
   },[auth.profile])
+
+  // A saved voyage (destination + where the boat started) comes back when someone logs in
+  useEffect(()=>{
+    const v = auth.voyage
+    if(!v) return
+    if(v.destination && DESTINATIONS.some(d=>d.id===v.destination)) setDestination(v.destination)
+    setVoyageStart(v.start)
+  },[auth.voyage])
+
+  function chooseDestination(id:string) {
+    if(id===destination) return
+    setDestination(id)
+    setVoyageStart(xpRef.current)      // the new voyage begins now, from the harbor
+    auth.saveVoyage(id, xpRef.current)
+  }
 
   function saveQuests(ids:string[], gained:number) {
     setDoneToday(ids.length)
@@ -1868,7 +1839,7 @@ function MainSite() {
       )}
       <HeroSection onEnter={()=>{setJourneyStarted(true);document.getElementById('destination')?.scrollIntoView({behavior:'smooth'})}} destination={destination}/>
       {auth.user&&<WelcomeSection name={auth.user.sailor} rank={xpLevel(totalXP).rank} xp={totalXP} nextXp={xpLevel(totalXP).next} isTop={xpLevel(totalXP).rank==='Captain'} done={doneToday} total={QUEST_CATS.reduce((n,c)=>n+c.quests.length,0)}/>}
-      <DestinationSection selected={destination} onSelect={setDestination}/>
+      <DestinationSection selected={destination} onSelect={chooseDestination} progressXp={Math.max(0,totalXP-voyageStart)} loggedIn={!!auth.user}/>
             <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests}/>
       <StormSection/>
           <BottlesSection user={auth.user} onLogin={()=>setShowAuth(true)}/>
