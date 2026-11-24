@@ -1087,12 +1087,13 @@ function HeroSection({ onEnter, destination }:{onEnter:()=>void; destination:str
   )
 }
 
-function DestinationSection({ selected, onSelect, progressXp, loggedIn }:{selected:string|null;onSelect:(id:string)=>void;progressXp:number;loggedIn:boolean}) {
+function DestinationSection({ selected, onSelect, progressXp, loggedIn, locked=false, onLocked }:{selected:string|null;onSelect:(id:string)=>void;progressXp:number;loggedIn:boolean;locked?:boolean;onLocked?:()=>void}) {
   const { t } = useI18n()
   const [showMap, setShowMap] = useState(false)
   useEffect(()=>{ if(selected) setShowMap(true) },[selected])
   // Choosing a new place restarts the voyage, so ask first if the boat has already sailed somewhere
   const pick = (id:string) => {
+    if(locked){ onLocked?.(); return }   // visitors can look, but need an account to set sail
     if(selected && selected!==id && progressXp>0 && !window.confirm(t("Change destination? Your boat will start the new voyage from the beginning."))) return
     onSelect(id)
   }
@@ -1109,6 +1110,7 @@ function DestinationSection({ selected, onSelect, progressXp, loggedIn }:{select
           <div style={{fontSize:12,letterSpacing:'.2em',color:'#4a6a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>{t("Where are you sailing?")}</div>
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>{t("Choose your")} <em style={{fontStyle:'italic',color:'#5a7a92'}}>{t("destination")}</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:460,margin:'0 auto'}}>{t("Recovery is a journey toward somewhere beautiful. Pick the place that calls to your heart.")}</p>
+          {locked&&<VisitorNote text={t('Create a free account to choose your destination and set sail. You can look at every place first!')} onLogin={()=>onLocked?.()}/>}
         </div>
         <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(188px,1fr))',gap:14,marginBottom:48}}>
           {DESTINATIONS.map(d=>(
@@ -1155,7 +1157,18 @@ function DestinationSection({ selected, onSelect, progressXp, loggedIn }:{select
   )
 }
 
-function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void}) {
+// Shown to visitors who are not logged in: they can look around, but anything that saves needs an account.
+function VisitorNote({ text, onLogin }:{text:string;onLogin:()=>void}) {
+  const { t } = useI18n()
+  return (
+    <div role="note" style={{maxWidth:560,margin:'0 auto 32px',display:'flex',alignItems:'center',justifyContent:'center',gap:12,flexWrap:'wrap',background:'rgba(196,154,66,.12)',border:'1px solid rgba(196,154,66,.3)',borderRadius:18,padding:'12px 18px'}}>
+      <span style={{fontSize:14,color:'#5a4020',lineHeight:1.5,textAlign:'left',flex:'1 1 240px'}}>🔒 {text}</span>
+      <button onClick={onLogin} style={{background:'linear-gradient(135deg,#9AB3CA,#7a9ab0)',color:'white',border:'none',borderRadius:50,padding:'9px 20px',fontSize:13,fontWeight:800,cursor:'pointer',fontFamily:'Nunito,sans-serif'}}>{t("Log in or sign up")}</button>
+    </div>
+  )
+}
+
+function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked=false, onLocked }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void;locked?:boolean;onLocked?:()=>void}) {
   const { t, lang } = useI18n()
   const extras = useDailyExtras()
   const [completed, setCompleted] = useState<Set<string>>(new Set())
@@ -1177,6 +1190,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
   const allDone = everyDone(completed)
 
   function toggle(qid:string, xp:number, el:HTMLElement|null) {
+    if(locked){ onLocked?.(); return }   // visitors can look, but need an account to tick tasks off
     if(completed.has(qid)) return
     const next=new Set(completed); next.add(qid)
         setCompleted(next); onXP(xp); onCompletedChange?.([...next],xp)
@@ -1196,6 +1210,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange }:{tota
           <div style={{fontSize:12,letterSpacing:'.2em',color:'#5a7a82',textTransform:'uppercase',fontWeight:700,marginBottom:14}}>{t("Ship's quest log")}</div>
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>{t("Daily")} <em style={{fontStyle:'italic',color:'#7a6a5a'}}>{t("Voyage Tasks")}</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 36px'}}>{t("Small acts of self-care are how you sail towards your destination. Each task earns XP, which also become Gold Anchors to spend on your sailor and cabin.")}</p>
+          {locked&&<VisitorNote text={t('Create a free account to tick off tasks, earn XP and save your progress. You can look around as much as you like!')} onLogin={()=>onLocked?.()}/>}
           <div style={{maxWidth:480,margin:'0 auto',background:'rgba(255,255,255,.7)',borderRadius:20,padding:'20px 28px',border:'1.5px solid rgba(154,179,202,.25)',backdropFilter:'blur(8px)'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -1777,6 +1792,7 @@ export default function App() {
 }
 
 function MainSite() {
+  const { t } = useI18n()
   const [activeSection, setActiveSection] = useState('hero')
   const [journeyStarted, setJourneyStarted] = useState(false)
   const [destination, setDestination] = useState<string|null>(null)
@@ -1786,6 +1802,7 @@ function MainSite() {
   const [myColor] = useState(()=>SAILOR_COLORS[Math.floor(Math.random()*SAILOR_COLORS.length)])
     const auth = useAuth()
   const [showAuth, setShowAuth] = useState(false)
+  const [authReason, setAuthReason] = useState('')
   const [savedCompleted, setSavedCompleted] = useState<string[]|undefined>(undefined)
   const [doneToday, setDoneToday] = useState(0)
 
@@ -1796,7 +1813,7 @@ function MainSite() {
   // When someone logs in, load their saved progress. When they log out, reset to a fresh voyage.
   useEffect(()=>{
     if(auth.profile){ setTotalXP(auth.profile.total_xp); setSavedCompleted(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests : []); setDoneToday(auth.profile.quests_day===todayKey() ? auth.profile.completed_quests.length : 0) }
-    else { setTotalXP(0); setSavedCompleted([]); setDoneToday(0); setVoyageStart(0) }
+    else { setTotalXP(0); setSavedCompleted([]); setDoneToday(0); setVoyageStart(0); setDestination(null) }
   },[auth.profile])
 
   // A saved voyage (destination + where the boat started) comes back when someone logs in
@@ -1806,6 +1823,11 @@ function MainSite() {
     if(v.destination && DESTINATIONS.some(d=>d.id===v.destination)) setDestination(v.destination)
     setVoyageStart(v.start)
   },[auth.voyage])
+
+  // A "visitor" is someone not logged in. They can look around everything, but anything that saves needs an account.
+  // (If the website has no database connected, it stays a open demo.)
+  const visitor = auth.enabled && !auth.user
+  function askLogin(reason:string) { setAuthReason(reason); setShowAuth(true) }
 
   function chooseDestination(id:string) {
     if(id===destination) return
@@ -1829,7 +1851,7 @@ function MainSite() {
   return (
     <div style={{fontFamily:'Nunito,sans-serif'}}>
             <Nav active={activeSection} destination={destination} user={auth.user} onLogin={()=>setShowAuth(true)} onLogout={auth.signOut}/>
-      {showAuth&&!auth.user&&<AuthPage enabled={auth.enabled} onClose={()=>setShowAuth(false)} signIn={auth.signIn} signUp={auth.signUp}/>}
+      {showAuth&&!auth.user&&<AuthPage enabled={auth.enabled} reason={authReason} onClose={()=>{setShowAuth(false);setAuthReason('')}} signIn={auth.signIn} signUp={auth.signUp}/>}
       {journeyStarted&&(
         <div style={{position:'fixed',right:18,top:'50%',transform:'translateY(-50%)',zIndex:40,display:'flex',flexDirection:'column',gap:9}}>
           {['hero','destination','quests','storm','letters','chat','sailor','lighthouse','shore'].map(id=>(
@@ -1839,8 +1861,8 @@ function MainSite() {
       )}
       <HeroSection onEnter={()=>{setJourneyStarted(true);document.getElementById('destination')?.scrollIntoView({behavior:'smooth'})}} destination={destination}/>
       {auth.user&&<WelcomeSection name={auth.user.sailor} rank={xpLevel(totalXP).rank} xp={totalXP} nextXp={xpLevel(totalXP).next} isTop={xpLevel(totalXP).rank==='Captain'} done={doneToday} total={QUEST_CATS.reduce((n,c)=>n+c.quests.length,0)}/>}
-      <DestinationSection selected={destination} onSelect={chooseDestination} progressXp={Math.max(0,totalXP-voyageStart)} loggedIn={!!auth.user}/>
-            <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests}/>
+      <DestinationSection selected={destination} onSelect={chooseDestination} progressXp={Math.max(0,totalXP-voyageStart)} loggedIn={!!auth.user} locked={visitor} onLocked={()=>askLogin(t('Create a free account to choose your destination and set sail.'))}/>
+            <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests} locked={visitor} onLocked={()=>askLogin(t('Create a free account to tick off tasks, earn XP and save your progress.'))}/>
       <StormSection/>
           <BottlesSection user={auth.user} onLogin={()=>setShowAuth(true)}/>
             <CrewRooms user={auth.user} onLogin={()=>setShowAuth(true)} decor={<OceanLife/>} waves={<Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>

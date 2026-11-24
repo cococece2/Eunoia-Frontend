@@ -7,6 +7,7 @@ const SAILOR_NAMES = ['CoralDrifter','TealHarbor','SeaSprite','SilverWave','Moon
 const suggestName = () => `${SAILOR_NAMES[Math.floor(Math.random() * SAILOR_NAMES.length)]}${Math.floor(Math.random() * 90) + 10}`
 
 type Props = {
+  reason?: string   // why we are asking, e.g. "Create an account to choose your destination"
   enabled: boolean
   onClose: () => void
   signIn: (email: string, password: string) => Promise<AuthResult>
@@ -20,7 +21,7 @@ const input: React.CSSProperties = {
 }
 const label: React.CSSProperties = { fontSize: 12, fontWeight: 700, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase', marginBottom: 6, display: 'block' }
 
-export default function AuthPage({ enabled, onClose, signIn, signUp }: Props) {
+export default function AuthPage({ enabled, onClose, signIn, signUp, reason }: Props) {
   const { t, tr } = useI18n()
   const [mode, setMode] = useState<'login' | 'join'>('login')
   const [email, setEmail] = useState('')
@@ -62,6 +63,9 @@ export default function AuthPage({ enabled, onClose, signIn, signUp }: Props) {
 
         <div style={{ textAlign: 'center', marginBottom: 22 }}>
           <img src={Anchor} alt="" style={{ width: 34, height: 34, objectFit: 'contain', marginBottom: 10 }} />
+          {reason && (
+            <div role="status" style={{ marginBottom: 14, fontSize: 13.5, lineHeight: 1.55, color: '#5a4020', background: 'rgba(196,154,66,.12)', border: '1px solid rgba(196,154,66,.3)', borderRadius: 14, padding: '10px 14px' }}>🔒 {reason}</div>
+          )}
           <h2 className="font-display" style={{ fontSize: 30, fontWeight: 400, color: '#2c4a5c', lineHeight: 1.2, margin: 0 }}>
             {mode === 'login' ? tr("Welcome <i>back</i>") : tr("Join the <i>crew</i>")}
           </h2>
