@@ -65,7 +65,7 @@ import OldPhone from './imports/OldPhone.png'
 import Text from './imports/Text.png'
 import { useAuth, todayKey } from './useAuth'
 import { useUserLetters, WriteLetterButton } from './UserLetters'
-import { pickDaily, useDailyExtras } from './dailyQuests'
+import { pickDaily, useDailyExtras, type Quest } from './dailyQuests'
 import AuthPage from './AuthPage'
 import AdminPage from './AdminPage'
 import { MyLettersButton } from './MyLetters'
@@ -75,6 +75,8 @@ import { routeInfo, NM_PER_XP, daysAtSteadyPace } from './sailing'
 import CrewRooms from './CrewRooms'
 import WelcomeSection from './WelcomeSection'
 import GumballMachine from './GumballMachine'
+import { ReflectionModal, JournalButton, saveReflection } from './Journal'
+import { promptFor } from './questPrompts'
 import { useI18n, LanguageToggle } from './i18n'
 import { HELPLINES } from './i18n/helplines'
 
@@ -1168,7 +1170,7 @@ function VisitorNote({ text, onLogin }:{text:string;onLogin:()=>void}) {
   )
 }
 
-function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked=false, onLocked }:{totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void;locked?:boolean;onLocked?:()=>void}) {
+function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked=false, onLocked, userId }:{userId?:string;totalXP:number;onXP:(xp:number)=>void;savedCompleted?:string[];onCompletedChange?:(ids:string[],gained:number)=>void;locked?:boolean;onLocked?:()=>void}) {
   const { t, lang } = useI18n()
   const extras = useDailyExtras()
   const [completed, setCompleted] = useState<Set<string>>(new Set())
@@ -1189,12 +1191,22 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked
   const everyDone = (set:Set<string>) => cats.every(c=>c.quests.every(q=>set.has(q.id)))
   const allDone = everyDone(completed)
 
-  function toggle(qid:string, xp:number, el:HTMLElement|null) {
+  // Tapping a task asks a short question first. The task only counts once a few words are written.
+  const [pending,setPending] = useState<{q:Quest;el:HTMLElement|null}|null>(null)
+  function toggle(q:Quest, el:HTMLElement|null) {
     if(locked){ onLocked?.(); return }   // visitors can look, but need an account to tick tasks off
+    if(completed.has(q.id)) return
+    setPending({q,el})
+  }
+  function finish(answer:string) {
+    if(!pending) return
+    const {q,el}=pending; const qid=q.id, xp=q.xp
+    setPending(null)
     if(completed.has(qid)) return
+    if(userId) saveReflection(userId,{id:qid,text:q.text},answer,day).catch(()=>{})  // best effort: the task counts even if saving fails
     const next=new Set(completed); next.add(qid)
-        setCompleted(next); onXP(xp); onCompletedChange?.([...next],xp)
-    if(el){ const r=el.getBoundingClientRect(),pr=el.closest('section')!.getBoundingClientRect(); setFloats(f=>[...f,{id:fid.current++,x:r.right-pr.left,y:r.top-pr.top,val:xp}]); setTimeout(()=>setFloats(f=>f.slice(1)),1000) }
+    setCompleted(next); onXP(xp); onCompletedChange?.([...next],xp)
+    if(el&&el.isConnected){ const r=el.getBoundingClientRect(),pr=el.closest('section')!.getBoundingClientRect(); setFloats(f=>[...f,{id:fid.current++,x:r.right-pr.left,y:r.top-pr.top,val:xp}]); setTimeout(()=>setFloats(f=>f.slice(1)),1000) }
     if(everyDone(next)){ setTimeout(()=>setShowConfetti(true),200); setTimeout(()=>setShowConfetti(false),3000) }
   }
 
@@ -1204,6 +1216,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked
   return (
     <section id="quests" style={{position:'relative',background:'linear-gradient(180deg,#f8f3ee 0%,#E0D8D0 50%,#dfeaeb 100%)',padding:'100px 24px 130px',overflow:'hidden'}}>
       {showConfetti&&<Confetti/>}
+      {pending&&<ReflectionModal questText={pending.q.translations?.[lang]||t(pending.q.text)} prompt={promptFor(pending.q)} onSubmit={finish} onCancel={()=>setPending(null)}/>}
       {floats.map(f=><div key={f.id} className="xp-float" style={{left:f.x+8,top:f.y}}>+{f.val} XP</div>)}
       <div style={{maxWidth:960,margin:'0 auto',position:'relative',zIndex:2}}>
         <div style={{textAlign:'center',marginBottom:52}}>
@@ -1211,6 +1224,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked
           <h2 className="font-display" style={{fontSize:'clamp(30px,5vw,50px)',fontWeight:400,color:'#2c4a5c',marginBottom:16,lineHeight:1.2}}>{t("Daily")} <em style={{fontStyle:'italic',color:'#7a6a5a'}}>{t("Voyage Tasks")}</em></h2>
           <p style={{fontSize:16,color:'#6a8a98',lineHeight:1.7,maxWidth:480,margin:'0 auto 36px'}}>{t("Small acts of self-care are how you sail towards your destination. Each task earns XP, which also become Gold Anchors to spend on your sailor and cabin.")}</p>
           {locked&&<VisitorNote text={t('Create a free account to tick off tasks, earn XP and save your progress. You can look around as much as you like!')} onLogin={()=>onLocked?.()}/>}
+          {!locked&&userId&&<div style={{marginBottom:18}}><JournalButton/></div>}
           <div style={{maxWidth:480,margin:'0 auto',background:'rgba(255,255,255,.7)',borderRadius:20,padding:'20px 28px',border:'1.5px solid rgba(154,179,202,.25)',backdropFilter:'blur(8px)'}}>
             <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:12}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
@@ -1241,7 +1255,7 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked
               {cat.quests.map(q=>{
                 const done=completed.has(q.id)
                 return (
-                  <div key={q.id} className={`quest-item ${done?'done':''}`} style={{background:done?`${cat.color}12`:'transparent'}} onClick={e=>toggle(q.id,q.xp,e.currentTarget)}>
+                  <div key={q.id} className={`quest-item ${done?'done':''}`} style={{background:done?`${cat.color}12`:'transparent'}} onClick={e=>toggle(q,e.currentTarget)}>
                     <div style={{display:'flex',alignItems:'flex-start',gap:12}}>
                       <div style={{width:24,height:24,borderRadius:8,border:done?`2px solid ${cat.color}`:`2px solid ${cat.color}50`,background:done?cat.color:'transparent',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',marginTop:1,transition:'all .3s'}}>
                         {done&&<span className="animate-check-pop" style={{color:'white',fontSize:14,fontWeight:700}}>✓</span>}
@@ -1862,7 +1876,7 @@ function MainSite() {
       <HeroSection onEnter={()=>{setJourneyStarted(true);document.getElementById('destination')?.scrollIntoView({behavior:'smooth'})}} destination={destination}/>
       {auth.user&&<WelcomeSection name={auth.user.sailor} rank={xpLevel(totalXP).rank} xp={totalXP} nextXp={xpLevel(totalXP).next} isTop={xpLevel(totalXP).rank==='Captain'} done={doneToday} total={QUEST_CATS.reduce((n,c)=>n+c.quests.length,0)}/>}
       <DestinationSection selected={destination} onSelect={chooseDestination} progressXp={Math.max(0,totalXP-voyageStart)} loggedIn={!!auth.user} locked={visitor} onLocked={()=>askLogin(t('Create a free account to choose your destination and set sail.'))}/>
-            <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests} locked={visitor} onLocked={()=>askLogin(t('Create a free account to tick off tasks, earn XP and save your progress.'))}/>
+            <QuestSection totalXP={totalXP} onXP={xp=>setTotalXP(t=>t+xp)} savedCompleted={savedCompleted} onCompletedChange={saveQuests} userId={auth.user?.id} locked={visitor} onLocked={()=>askLogin(t('Create a free account to tick off tasks, earn XP and save your progress.'))}/>
       <StormSection/>
           <BottlesSection user={auth.user} onLogin={()=>setShowAuth(true)}/>
             <CrewRooms user={auth.user} onLogin={()=>setShowAuth(true)} decor={<OceanLife/>} waves={<Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>

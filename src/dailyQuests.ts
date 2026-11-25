@@ -9,7 +9,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from './lib/supabase'
 
-export type Quest = { id: string; text: string; xp: number; translations?: Record<string, string> | null }
+export type Quest = { id: string; text: string; xp: number; translations?: Record<string, string> | null; prompt?: string | null }
 
 /** A quest added on the admin page (#/admin → Daily tasks). It joins the rotation on its start day. */
 export type DailyExtra = {
@@ -18,6 +18,7 @@ export type DailyExtra = {
   body: string
   xp: number
   translations: Record<string, string> | null
+  prompt?: string | null // the question asked when a sailor finishes it (optional)
   starts_on: string      // first day it can appear, "YYYY-MM-DD"
   ends_on: string | null // first day it no longer appears (empty = keeps going)
 }
@@ -29,13 +30,15 @@ export function useDailyExtras(): DailyExtra[] {
     const sb = supabase
     if (!sb) return
     let cancelled = false
-    sb.from('daily_quests')
-      .select('id,category,body,xp,translations,starts_on,ends_on')
-      .order('id', { ascending: true })
-      .then(({ data, error }: { data: DailyExtra[] | null; error: unknown }) => {
-        if (cancelled || error || !data) return
-        setRows(data)
-      })
+    // Asks for the "prompt" column too. If 09-journal.sql has not been run yet, fall back so quests never disappear.
+    const load = async () => {
+      const q = (cols: string) => sb.from('daily_quests').select(cols).order('id', { ascending: true })
+      let res = await q('id,category,body,xp,translations,prompt,starts_on,ends_on')
+      if (res.error) res = await q('id,category,body,xp,translations,starts_on,ends_on')
+      if (cancelled || res.error || !res.data) return
+      setRows(res.data as unknown as DailyExtra[])
+    }
+    load()
     return () => { cancelled = true }
   }, [])
   return rows
@@ -161,7 +164,7 @@ function dealt<Q extends Quest>(pool: Q[], n: number, catId: string, dayNum: num
 function extrasFor(day: string, catId: string, extras: DailyExtra[]): Quest[] {
   return extras
     .filter(e => e.category === catId && e.starts_on <= day && (!e.ends_on || e.ends_on > day))
-    .map(e => ({ id: `d${e.id}`, text: e.body, xp: e.xp, translations: e.translations }))
+    .map(e => ({ id: `d${e.id}`, text: e.body, xp: e.xp, translations: e.translations, prompt: e.prompt }))
 }
 
 /**

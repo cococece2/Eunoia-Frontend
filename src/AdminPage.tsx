@@ -582,6 +582,7 @@ function CrewRequests({ email, onSignOut, switcher }: { email?: string; onSignOu
 // ── Daily tasks (the 6 cards in the quest log) ───────────────────────────────
 type DailyRow = {
   id: number
+  prompt?: string | null
   category: string
   body: string
   xp: number
@@ -613,7 +614,7 @@ function dailyStatus(r: DailyRow): { label: string; live: boolean } {
 function DailyForm({ initial, saveLabel, onSave, onCancel }: {
   initial?: DailyRow
   saveLabel: string
-  onSave: (v: { category: string; body: string; xp: number; translations: Record<string, string> }) => Promise<string | null>
+  onSave: (v: { category: string; body: string; xp: number; translations: Record<string, string>; prompt: string | null }) => Promise<string | null>
   onCancel?: () => void
 }) {
   const [category, setCategory] = useState<string>(initial?.category ?? 'anchor')
@@ -621,6 +622,7 @@ function DailyForm({ initial, saveLabel, onSave, onCancel }: {
   const [xp, setXp] = useState(initial?.xp ?? 15)
   const [tr, setTr] = useState<Record<string, string>>(initial?.translations ?? {})
   const [showTr, setShowTr] = useState(Object.keys(initial?.translations ?? {}).length > 0)
+  const [ask, setAsk] = useState(initial?.prompt ?? '')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
@@ -630,12 +632,12 @@ function DailyForm({ initial, saveLabel, onSave, onCancel }: {
     if (text.length < 5) { setError('Write at least a few words.'); return }
     const clean: Record<string, string> = {}
     for (const f of TRANSLATION_FIELDS) { const v = (tr[f.code] ?? '').trim(); if (v) clean[f.code] = v }
-    if ([text, ...Object.values(clean)].some(v => RISKY.test(v))) { setError(RISKY_MESSAGE); return }
+    if ([text, ask, ...Object.values(clean)].some(v => RISKY.test(v))) { setError(RISKY_MESSAGE); return }
     setBusy(true); setError('')
-    const err = await onSave({ category, body: text, xp, translations: clean })
+    const err = await onSave({ category, body: text, xp, translations: clean, prompt: ask.trim() || null })
     setBusy(false)
     if (err) { setError(err); return }
-    if (!onCancel) { setBody(''); setTr({}); setShowTr(false) }
+    if (!onCancel) { setBody(''); setAsk(''); setTr({}); setShowTr(false) }
   }
 
   const label: CSSProperties = { fontSize: 12, fontWeight: 700, color: '#5a7a82', letterSpacing: '.06em', textTransform: 'uppercase' }
@@ -659,6 +661,12 @@ function DailyForm({ initial, saveLabel, onSave, onCancel }: {
           style={{ ...input, marginTop: 6, resize: 'vertical', fontSize: 14, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
       </label>
       <div style={{ fontSize: 12, color: '#8a9aaa' }}>{body.trim().length}/200 · Keep it gentle. No numbers (weights, calories, sizes), no diet or exercise tips.</div>
+      <label style={label}>Question the sailor answers when they finish (optional)
+        <input value={ask} onChange={e => setAsk(e.target.value)} maxLength={200}
+          placeholder="e.g. Which song did you send, and why?"
+          style={{ ...input, marginTop: 6, fontSize: 14, textTransform: 'none', letterSpacing: 0, fontWeight: 400 }} />
+      </label>
+      <div style={{ fontSize: 12, color: '#8a9aaa' }}>Leave it empty to ask "How did it go? Write a few words about it." Ask about feelings, never about food amounts or numbers. The question shows in English.</div>
       <button type="button" onClick={() => setShowTr(o => !o)} style={{ ...btn('transparent', '#5a7a92'), alignSelf: 'flex-start', padding: '4px 0' }}>
         {showTr ? '− Hide translations' : '+ Add translations (optional)'}
       </button>
@@ -682,27 +690,28 @@ function DailyTasks({ email, onSignOut, switcher }: { email?: string; onSignOut:
     const sb = supabase
     if (!sb) return
     setError('')
-    const { data, error } = await sb.from('daily_quests')
-      .select('id,category,body,xp,translations,starts_on,ends_on').order('id', { ascending: true })
+    const q = (cols: string) => sb.from('daily_quests').select(cols).order('id', { ascending: true })
+    let { data, error } = await q('id,category,body,xp,translations,prompt,starts_on,ends_on')
+    if (error) ({ data, error } = await q('id,category,body,xp,translations,starts_on,ends_on'))  // 09-journal.sql not run yet
     if (error) { setError(error.message.includes('daily_quests') ? 'The daily_quests table is missing. Run 05-daily-quests.sql in Supabase first.' : error.message); setRows([]); return }
-    setRows(data as DailyRow[])
+    setRows(data as unknown as DailyRow[])
   }, [])
 
   useEffect(() => { load() }, [load])
 
   function say(msg: string) { setFlash(msg); setTimeout(() => setFlash(''), 5000) }
 
-  async function add(v: { category: string; body: string; xp: number; translations: Record<string, string> }) {
+  async function add(v: { category: string; body: string; xp: number; translations: Record<string, string>; prompt: string | null }) {
     if (!supabase) return 'Not connected.'
-    const { error } = await supabase.from('daily_quests').insert({ ...v, starts_on: dayKey(1) })
+    const { error } = await supabase.from('daily_quests').insert({ ...v, prompt: v.prompt ?? undefined, starts_on: dayKey(1) })
     if (error) return error.message
     say('Added. It joins the rotation tomorrow, so everyone keeps the same list today.')
     await load()
     return null
   }
-  async function save(id: number, v: { category: string; body: string; xp: number; translations: Record<string, string> }) {
+  async function save(id: number, v: { category: string; body: string; xp: number; translations: Record<string, string>; prompt: string | null }) {
     if (!supabase) return 'Not connected.'
-    const { error } = await supabase.from('daily_quests').update({ body: v.body, xp: v.xp, translations: v.translations }).eq('id', id)
+    const { error } = await supabase.from('daily_quests').update({ body: v.body, xp: v.xp, translations: v.translations, ...(v.prompt !== null || rows?.find(r => r.id === id)?.prompt ? { prompt: v.prompt } : {}) }).eq('id', id)
     if (error) return error.message
     setEditing(null)
     say('Saved.')
