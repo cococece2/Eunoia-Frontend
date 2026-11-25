@@ -202,14 +202,14 @@ const TRANSLATION_FIELDS = [
 
 // A simple safety net that matches the site's rules: no numbers about weight, food or body size,
 // and nothing about diets, fasting or exercise tips. It cannot catch everything, so still read what you write.
-type Section = 'letters' | 'flagged' | 'crews' | 'daily' | 'bonus'
+type Section = 'letters' | 'flagged' | 'crews' | 'daily' | 'bonus' | 'comments'
 
 function SectionTabs({ section, onChange }: { section: Section; onChange: (s: Section) => void }) {
   const tab = (id: Section, label: string) => (
     <button key={id} onClick={() => onChange(id)} aria-pressed={section === id}
       style={{ ...btn(section === id ? 'white' : 'rgba(255,255,255,.45)', section === id ? '#2c4a5c' : '#5a7a92'), border: `1.5px solid ${section === id ? '#9AB3CA' : 'rgba(154,179,202,.3)'}` }}>{label}</button>
   )
-  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('flagged', 'Flagged messages')}{tab('crews', 'Crew requests')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}</nav>
+  return <nav aria-label="Admin sections" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 22 }}>{tab('letters', 'Letters')}{tab('flagged', 'Flagged messages')}{tab('crews', 'Crew requests')}{tab('daily', 'Daily tasks')}{tab('bonus', 'Bonus challenges')}{tab('comments', 'Comment box')}</nav>
 }
 
 function TranslationFields({ tr, setTr }: { tr: Record<string, string>; setTr: React.Dispatch<React.SetStateAction<Record<string, string>>> }) {
@@ -806,12 +806,88 @@ function DailyTasks({ email, onSignOut, switcher }: { email?: string; onSignOut:
   )
 }
 
+// ── Comment box (anonymous comments from sailors) ─────────────────────────────
+type CommentRow = { id: number; body: string; seen: boolean; created_at: string }
+
+function CommentBoxAdmin({ email, onSignOut, switcher }: { email?: string; onSignOut: () => void; switcher: React.ReactNode }) {
+  const [rows, setRows] = useState<CommentRow[] | null>(null)
+  const [filter, setFilter] = useState<'new' | 'all'>('new')
+  const [error, setError] = useState('')
+
+  const load = useCallback(async () => {
+    const sb = supabase
+    if (!sb) return
+    setError('')
+    const { data, error } = await sb.from('comment_box').select('id,body,seen,created_at').order('created_at', { ascending: false }).limit(300)
+    if (error) { setError(error.message.includes('comment_box') ? 'The comment box table is missing. Run 11-comment-box.sql in Supabase first.' : error.message); setRows([]); return }
+    setRows((data ?? []) as CommentRow[])
+  }, [])
+  useEffect(() => { load() }, [load])
+
+  async function setSeen(r: CommentRow, seen: boolean) {
+    if (!supabase) return
+    setRows(l => (l ?? []).map(x => x.id === r.id ? { ...x, seen } : x))
+    const { error } = await supabase.from('comment_box').update({ seen }).eq('id', r.id)
+    if (error) { setError(error.message); load() }
+  }
+  async function remove(r: CommentRow) {
+    if (!supabase || !window.confirm('Delete this comment for good?')) return
+    const { error } = await supabase.from('comment_box').delete().eq('id', r.id)
+    if (error) { setError(error.message); return }
+    setRows(l => (l ?? []).filter(x => x.id !== r.id))
+  }
+  const unread = (rows ?? []).filter(r => !r.seen).length
+  const shown = (rows ?? []).filter(r => filter === 'all' || !r.seen)
+
+  return (
+    <Shell email={email} onSignOut={onSignOut}>
+      {switcher}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 8 }}>
+        <h1 className="font-display" style={{ fontSize: 30, fontWeight: 400, margin: 0 }}>Comment box</h1>
+        <button onClick={load} style={{ ...btn(SOFT, '#3a5a72'), marginLeft: 'auto' }}>↻ Refresh</button>
+      </div>
+      <p style={{ margin: '0 0 18px', fontSize: 14, color: '#6a8a98', lineHeight: 1.6 }}>
+        Anonymous comments from the site. They carry no name or account, so you cannot tell who wrote them and cannot reply. If one sounds like someone is in danger, it cannot be traced; that is why the box points people to the Lighthouse section.
+      </p>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+        {(['new', 'all'] as const).map(f => (
+          <button key={f} onClick={() => setFilter(f)} aria-pressed={filter === f}
+            style={{ ...btn(filter === f ? 'white' : 'rgba(255,255,255,.45)', filter === f ? '#2c4a5c' : '#5a7a92'), border: `1.5px solid ${filter === f ? '#9AB3CA' : 'rgba(154,179,202,.3)'}` }}>
+            {f === 'new' ? `New (${unread})` : `All (${rows?.length ?? 0})`}
+          </button>
+        ))}
+      </div>
+      {error && <div role="alert" style={{ marginBottom: 14, fontSize: 13.5, color: '#8a5a5a', background: 'rgba(138,90,90,.08)', borderRadius: 12, padding: '10px 14px' }}>{error}</div>}
+      {rows === null
+        ? <p style={{ color: '#6a8a98' }}>Loading…</p>
+        : shown.length === 0
+          ? <div style={{ ...card, padding: '30px 20px', textAlign: 'center', color: '#6a8a98' }}>{filter === 'new' ? 'No new comments. 🌊' : 'No comments yet.'}</div>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {shown.map(r => (
+                <article key={r.id} style={{ ...card, padding: '16px 18px' }}>
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center', fontSize: 12, color: '#8a9aaa', marginBottom: 8, flexWrap: 'wrap' }}>
+                    {!r.seen && <span style={{ background: '#c0504d', color: 'white', borderRadius: 50, padding: '2px 9px', fontWeight: 800, fontSize: 11 }}>NEW</span>}
+                    <span>{new Date(r.created_at).toLocaleString()}</span>
+                  </div>
+                  <p style={{ margin: '0 0 12px', fontSize: 15, color: '#2c3a46', lineHeight: 1.65, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{r.body}</p>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <button onClick={() => setSeen(r, !r.seen)} style={btn(SOFT, '#3a5a72')}>{r.seen ? 'Mark as new' : 'Mark as read'}</button>
+                    <button onClick={() => remove(r)} style={btn('rgba(138,90,90,.14)', '#8a5a5a')}>Delete</button>
+                  </div>
+                </article>
+              ))}
+            </div>}
+    </Shell>
+  )
+}
+
 function AdminArea({ email, onSignOut }: { email?: string; onSignOut: () => void }) {
   const [section, setSection] = useState<Section>('letters')
   const switcher = <SectionTabs section={section} onChange={setSection} />
   if (section === 'flagged') return <FlaggedMessages email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'crews') return <CrewRequests email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'daily') return <DailyTasks email={email} onSignOut={onSignOut} switcher={switcher} />
+  if (section === 'comments') return <CommentBoxAdmin email={email} onSignOut={onSignOut} switcher={switcher} />
   if (section === 'bonus') return <BonusChallenges email={email} onSignOut={onSignOut} switcher={switcher} />
   return <ReviewQueue email={email} onSignOut={onSignOut} switcher={switcher} />
 }

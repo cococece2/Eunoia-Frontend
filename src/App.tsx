@@ -77,6 +77,7 @@ import WelcomeSection from './WelcomeSection'
 import GumballMachine from './GumballMachine'
 import { ReflectionModal, JournalButton, saveReflection } from './Journal'
 import Notebook from './Notebook'
+import CommentBox from './CommentBox'
 import { promptFor } from './questPrompts'
 import { useI18n, LanguageToggle } from './i18n'
 import { HELPLINES } from './i18n/helplines'
@@ -1857,7 +1858,7 @@ function MainSite() {
   }
 
   useEffect(()=>{
-    const ids=['hero','destination','quests','storm','letters','chat','sailor','notebook','lighthouse','shore']
+    const ids=['hero','destination','quests','storm','letters','chat','sailor','notebook','feedback','lighthouse','shore']
     const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)setActiveSection(e.target.id)})},{threshold:.35})
     ids.forEach(id=>{const el=document.getElementById(id);if(el)obs.observe(el)})
     return ()=>obs.disconnect()
@@ -1869,7 +1870,7 @@ function MainSite() {
       {showAuth&&!auth.user&&<AuthPage enabled={auth.enabled} reason={authReason} onClose={()=>{setShowAuth(false);setAuthReason('')}} signIn={auth.signIn} signUp={auth.signUp}/>}
       {journeyStarted&&(
         <div style={{position:'fixed',right:18,top:'50%',transform:'translateY(-50%)',zIndex:40,display:'flex',flexDirection:'column',gap:9}}>
-          {['hero','destination','quests','storm','letters','chat','sailor','notebook','lighthouse','shore'].map(id=>(
+          {['hero','destination','quests','storm','letters','chat','sailor','notebook','feedback','lighthouse','shore'].map(id=>(
             <a key={id} href={`#${id}`} aria-label={id}><div className={`jdot ${activeSection===id?'active':''}`}/></a>
           ))}
         </div>
@@ -1883,6 +1884,7 @@ function MainSite() {
             <CrewRooms user={auth.user} onLogin={()=>setShowAuth(true)} decor={<OceanLife/>} waves={<Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
       <SailorSection totalXP={totalXP}/>
       <Notebook locked={visitor} onLocked={()=>askLogin(t('Create a free account to plan your day and keep a private journal.'))} waves={<Waves h={110} c1="#9AB3CA" c2="#7a9ab0" c3="#5a7a92"/>}/>
+      <CommentBox locked={visitor} onLocked={()=>askLogin(t('Create a free account to send a comment.'))} waves={<Waves h={100} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
       <LighthouseSection/>
       <ShoreSection destination={destination}/>
       <Footer/>
