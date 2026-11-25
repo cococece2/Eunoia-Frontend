@@ -58,7 +58,8 @@ export function ReflectionModal({ questText, prompt, onSubmit, onCancel }: { que
 
 type Entry = { id: number; quest_text: string; answer: string; day: string; created_at: string }
 
-function JournalModal({ onClose }: { onClose: () => void }) {
+/** The task notes (answers written when finishing tasks), newest first, with delete. Used by the journal pop-up and the notebook. */
+export function ReflectionList() {
   const { t } = useI18n()
   const [rows, setRows] = useState<Entry[] | null>(null)
   const load = useCallback(async () => {
@@ -67,11 +68,6 @@ function JournalModal({ onClose }: { onClose: () => void }) {
     setRows((data ?? []) as Entry[])
   }, [])
   useEffect(() => { load() }, [load])
-  useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', h)
-    return () => window.removeEventListener('keydown', h)
-  }, [onClose])
 
   async function remove(id: number) {
     if (!supabase || !window.confirm(t('Delete this entry from your journal?'))) return
@@ -80,6 +76,31 @@ function JournalModal({ onClose }: { onClose: () => void }) {
   }
   const when = (iso: string) => { try { return new Date(iso).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) } catch { return '' } }
 
+  return (
+    <ul style={{ margin: 0, padding: '6px 0 0', display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {rows === null ? <li style={{ listStyle: 'none', color: '#6a8a98' }}>…</li>
+        : rows.length === 0 ? <li style={{ listStyle: 'none', textAlign: 'center', color: '#6a8a98', fontSize: 14, padding: '30px 0', lineHeight: 1.6 }}>{t('Nothing here yet. Finish a task and your words will be kept here.')}</li>
+        : rows.map(r => (
+          <li key={r.id} style={{ listStyle: 'none', background: 'rgba(255,255,255,.7)', border: '1.5px solid rgba(154,179,202,.28)', borderRadius: 16, padding: '14px 16px' }}>
+            <div style={{ fontSize: 12, color: '#8a9aaa', marginBottom: 6, display: 'flex', gap: 8 }}>
+              <span>{when(r.created_at)}</span>
+              <button onClick={() => remove(r.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#a08080', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Nunito,sans-serif' }}>{t('Delete')}</button>
+            </div>
+            <div style={{ fontSize: 12.5, color: '#5a7a92', fontWeight: 700, lineHeight: 1.45, marginBottom: 6 }}>{r.quest_text}</div>
+            <div style={{ fontSize: 14.5, color: '#2c3a46', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{r.answer}</div>
+          </li>
+        ))}
+    </ul>
+  )
+}
+
+function JournalModal({ onClose }: { onClose: () => void }) {
+  const { t } = useI18n()
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', h)
+    return () => window.removeEventListener('keydown', h)
+  }, [onClose])
   return createPortal(
     <div className="scroll-modal-wrap" onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}>
       <div className="animate-fade-in-up" role="dialog" aria-modal="true" aria-label={t('My journal')}
@@ -89,20 +110,7 @@ function JournalModal({ onClose }: { onClose: () => void }) {
           <h2 className="font-display" style={{ fontSize: 26, fontWeight: 400, color: '#2c4a5c', margin: 0 }}>{t('My journal')}</h2>
           <p style={{ fontSize: 13, color: '#6a8a98', margin: '6px 0 0', lineHeight: 1.55 }}>🔒 {t('The words you write when you finish a task. Only you can see them.')}</p>
         </div>
-        <ul style={{ margin: 0, padding: '6px 26px 26px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {rows === null ? <li style={{ listStyle: 'none', color: '#6a8a98' }}>…</li>
-            : rows.length === 0 ? <li style={{ listStyle: 'none', textAlign: 'center', color: '#6a8a98', fontSize: 14, padding: '30px 0', lineHeight: 1.6 }}>{t('Nothing here yet. Finish a task and your words will be kept here.')}</li>
-            : rows.map(r => (
-              <li key={r.id} style={{ listStyle: 'none', background: 'rgba(255,255,255,.7)', border: '1.5px solid rgba(154,179,202,.28)', borderRadius: 16, padding: '14px 16px' }}>
-                <div style={{ fontSize: 12, color: '#8a9aaa', marginBottom: 6, display: 'flex', gap: 8 }}>
-                  <span>{when(r.created_at)}</span>
-                  <button onClick={() => remove(r.id)} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#a08080', fontSize: 12, cursor: 'pointer', textDecoration: 'underline', fontFamily: 'Nunito,sans-serif' }}>{t('Delete')}</button>
-                </div>
-                <div style={{ fontSize: 12.5, color: '#5a7a92', fontWeight: 700, lineHeight: 1.45, marginBottom: 6 }}>{r.quest_text}</div>
-                <div style={{ fontSize: 14.5, color: '#2c3a46', lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{r.answer}</div>
-              </li>
-            ))}
-        </ul>
+        <div style={{ padding: '0 26px 26px', overflowY: 'auto' }}><ReflectionList /></div>
       </div>
     </div>,
     document.body,
