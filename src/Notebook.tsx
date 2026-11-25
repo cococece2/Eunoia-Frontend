@@ -144,13 +144,14 @@ function Thoughts() {
   )
 }
 
-export default function Notebook({ locked, onLocked, waves }: { locked: boolean; onLocked: () => void; waves?: ReactNode }) {
+export default function Notebook({ locked, onLocked, waves, decor }: { locked: boolean; onLocked: () => void; waves?: ReactNode; decor?: ReactNode }) {
   const { t } = useI18n()
   const [tab, setTab] = useState<Tab>('plan')
   const tabs: [Tab, string][] = [['plan', '🗓️ ' + t('Planner')], ['thoughts', '✍️ ' + t('Journal')]]
 
   return (
     <section id="notebook" style={{ position: 'relative', background: 'linear-gradient(180deg,#f8f3ee 0%,#e6edef 50%,#C6DDED 100%)', padding: '100px 24px 150px', overflow: 'hidden' }}>
+      {decor}
     <div style={{ position: 'relative', zIndex: 2, maxWidth: 560, margin: '0 auto', ...card }}>
       <h3 className="font-display" style={{ fontSize: 'clamp(24px,4vw,32px)', fontWeight: 400, color: '#2c4a5c', margin: '0 0 6px', textAlign: 'center' }}>{t('My Notebook')}</h3>
       <p style={{ fontSize: 14, color: '#6a8a98', lineHeight: 1.65, textAlign: 'center', margin: '0 auto 18px', maxWidth: 480 }}>🔒 {t('Plan your day and write down your thoughts. Only you can see your notebook.')}</p>

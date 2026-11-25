@@ -1282,6 +1282,41 @@ function QuestSection({ totalXP, onXP, savedCompleted, onCompletedChange, locked
   )
 }
 
+// ── Decorations for the Notebook and Comment box sections (hidden behind the cards, so they never get in the way) ──
+const SIDE_ONLY = '@media(max-width:900px){.deco-side{display:none}}'
+
+function NotebookDecor() {
+  const clouds=[{t:46,l:'8%',w:240,h:60,d:'0s'},{t:90,l:'60%',w:300,h:70,d:'2s'},{t:30,r:'6%',w:190,h:55,d:'4s'}]
+  return (
+    <div aria-hidden style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>
+      <style>{SIDE_ONLY}</style>
+      {clouds.map((c,i)=><div key={i} className="animate-drift-cloud" style={{position:'absolute',top:c.t,left:(c as any).l,right:(c as any).r,width:c.w,height:c.h,borderRadius:50,background:'rgba(198,221,237,.5)',filter:'blur(20px)',animationDelay:c.d}}/>)}
+      <OceanLife/>
+      <div className="deco-side" style={{position:'absolute',bottom:62,left:'6%'}}><ShipSVG size={120}/></div>
+      <div className="deco-side" style={{position:'absolute',top:'30%',right:'7%',opacity:.75}}><JellySVG color="#9AB3CA" size={54}/></div>
+      <div className="deco-side" style={{position:'absolute',top:'52%',left:'7%',opacity:.6}}><JellySVG color="#C6DDED" size={38}/></div>
+    </div>
+  )
+}
+
+function CommentDecor() {
+  return (
+    <div aria-hidden style={{position:'absolute',inset:0,pointerEvents:'none',overflow:'hidden'}}>
+      <style>{SIDE_ONLY}</style>
+      <div style={{position:'absolute',top:36,right:'10%',width:64,height:64,borderRadius:'50%',background:'rgba(240,200,120,.55)',boxShadow:'0 0 50px 22px rgba(240,200,120,.25)'}}/>
+      {[{t:60,l:'10%',w:220,h:55,d:'0s'},{t:30,l:'42%',w:260,h:60,d:'3s'}].map((c,i)=><div key={i} className="animate-drift-cloud" style={{position:'absolute',top:c.t,left:c.l,width:c.w,height:c.h,borderRadius:50,background:'rgba(198,221,237,.5)',filter:'blur(20px)',animationDelay:c.d}}/>)}
+      <div className="deco-side" style={{position:'absolute',bottom:50,right:'8%'}}><ShipSVG size={96}/></div>
+      <div className="deco-side animate-bob" style={{position:'absolute',bottom:52,left:'9%',width:34,height:90}}>
+        <div style={{transform:'scale(.5) rotate(68deg)',transformOrigin:'top left',marginLeft:60}}><BottleBodySVG color="#9AB3CA" id={9001} open/></div>
+      </div>
+      <div style={{position:'absolute',inset:0}}>
+        <div className="fish-r" style={{top:'78%',animationDuration:'30s'}}><FishSVG color="#7a9ab0" size={22}/></div>
+        <div className="fish-l" style={{top:'86%',animationDuration:'24s',animationDelay:'8s'}}><FishSVG color="#8a9a80" size={18} flip/></div>
+      </div>
+    </div>
+  )
+}
+
 function StormSection() {
   const { t } = useI18n()
   return (
@@ -1883,8 +1918,8 @@ function MainSite() {
           <BottlesSection user={auth.user} onLogin={()=>setShowAuth(true)}/>
             <CrewRooms user={auth.user} onLogin={()=>setShowAuth(true)} decor={<OceanLife/>} waves={<Waves h={110} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
       <SailorSection totalXP={totalXP}/>
-      <Notebook locked={visitor} onLocked={()=>askLogin(t('Create a free account to plan your day and keep a private journal.'))} waves={<Waves h={110} c1="#9AB3CA" c2="#7a9ab0" c3="#5a7a92"/>}/>
-      <CommentBox locked={visitor} onLocked={()=>askLogin(t('Create a free account to send a comment.'))} waves={<Waves h={100} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
+      <Notebook decor={<NotebookDecor/>} locked={visitor} onLocked={()=>askLogin(t('Create a free account to plan your day and keep a private journal.'))} waves={<Waves h={110} c1="#9AB3CA" c2="#7a9ab0" c3="#5a7a92"/>}/>
+      <CommentBox decor={<CommentDecor/>} locked={visitor} onLocked={()=>askLogin(t('Create a free account to send a comment.'))} waves={<Waves h={100} c1="#dfeaeb" c2="#C6DDED" c3="#9AB3CA"/>}/>
       <LighthouseSection/>
       <ShoreSection destination={destination}/>
       <Footer/>

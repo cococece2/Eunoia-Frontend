@@ -5,7 +5,7 @@ import { useI18n } from './i18n'
 // A small anonymous comment box. Comments are saved with no name or user id, so nobody can tell who wrote them.
 // Only the site admin can read them (#/admin → Comment box).
 
-export default function CommentBox({ locked, onLocked, waves }: { locked: boolean; onLocked: () => void; waves?: ReactNode }) {
+export default function CommentBox({ locked, onLocked, waves, decor }: { locked: boolean; onLocked: () => void; waves?: ReactNode; decor?: ReactNode }) {
   const { t } = useI18n()
   const [text, setText] = useState('')
   const [busy, setBusy] = useState(false)
@@ -26,6 +26,7 @@ export default function CommentBox({ locked, onLocked, waves }: { locked: boolea
 
   return (
     <section id="feedback" style={{ position: 'relative', background: 'linear-gradient(180deg,#f8f3ee 0%,#f3ece4 60%,#e9e4dc 100%)', padding: '90px 24px 140px', overflow: 'hidden' }}>
+      {decor}
       <div style={{ position: 'relative', zIndex: 2, maxWidth: 480, margin: '0 auto', background: 'rgba(255,255,255,.78)', border: '1.5px solid rgba(154,179,202,.28)', borderRadius: 20, padding: '26px 24px', textAlign: 'center', backdropFilter: 'blur(8px)' }}>
         <div style={{ fontSize: 30, marginBottom: 4 }} aria-hidden>💌</div>
         <h3 className="font-display" style={{ fontSize: 'clamp(22px,4vw,28px)', fontWeight: 400, color: '#2c4a5c', margin: '0 0 6px' }}>{t('Anonymous Comment Box')}</h3>
