@@ -600,4 +600,12 @@ export const zh: Record<string, string> = {
   "Send anonymously": "匿名发送",
   "We cannot reply to anonymous comments. If you need support right now, please see the Lighthouse section below.": "我们无法回复匿名评论。如果你现在需要支持，请看下方的灯塔部分。",
   "Create a free account to send a comment.": "创建免费账号即可发送评论。",
+  "Support our crowdfunding": "支持我们的众筹",
+  "Help Eunora reach more teens": "帮助 Eunora 触达更多青少年",
+  "Follow us on Instagram": "在 Instagram 上关注我们",
+  "Stories, news and updates": "故事、新闻和动态",
+  "Email us": "给我们发邮件",
+  "Coming soon": "即将推出",
+  "Stay connected": "保持联系",
+  "Support Eunora, follow along or just say hello.": "支持 Eunora、关注我们，或者只是打个招呼。",
 }

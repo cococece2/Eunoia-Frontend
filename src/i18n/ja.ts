@@ -600,4 +600,12 @@ export const ja: Record<string, string> = {
   "Send anonymously": "匿名で送る",
   "We cannot reply to anonymous comments. If you need support right now, please see the Lighthouse section below.": "匿名のコメントには返信できません。今すぐサポートが必要なときは、下の灯台のセクションを見てください。",
   "Create a free account to send a comment.": "無料アカウントをつくると、コメントを送れます。",
+  "Support our crowdfunding": "クラウドファンディングを応援する",
+  "Help Eunora reach more teens": "Eunoraをもっと多くのティーンに届けよう",
+  "Follow us on Instagram": "Instagramをフォロー",
+  "Stories, news and updates": "ストーリー、ニュース、お知らせ",
+  "Email us": "メールを送る",
+  "Coming soon": "近日公開",
+  "Stay connected": "つながろう",
+  "Support Eunora, follow along or just say hello.": "Eunoraを応援したり、フォローしたり、気軽にあいさつしてね。",
 }

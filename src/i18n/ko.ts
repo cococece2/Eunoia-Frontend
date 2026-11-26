@@ -600,4 +600,12 @@ export const ko: Record<string, string> = {
   "Send anonymously": "익명으로 보내기",
   "We cannot reply to anonymous comments. If you need support right now, please see the Lighthouse section below.": "익명 의견에는 답장할 수 없어요. 지금 도움이 필요하다면 아래 등대 섹션을 확인해 주세요.",
   "Create a free account to send a comment.": "무료 계정을 만들면 의견을 보낼 수 있어요.",
+  "Support our crowdfunding": "크라우드펀딩 응원하기",
+  "Help Eunora reach more teens": "Eunora가 더 많은 청소년에게 닿도록 도와주세요",
+  "Follow us on Instagram": "Instagram 팔로우하기",
+  "Stories, news and updates": "스토리, 소식, 업데이트",
+  "Email us": "이메일 보내기",
+  "Coming soon": "곧 공개돼요",
+  "Stay connected": "연결하기",
+  "Support Eunora, follow along or just say hello.": "Eunora를 응원하고, 팔로우하고, 그냥 인사를 건네 보세요.",
 }

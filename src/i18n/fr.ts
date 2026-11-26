@@ -600,4 +600,12 @@ export const fr: Record<string, string> = {
   "Send anonymously": "Envoyer anonymement",
   "We cannot reply to anonymous comments. If you need support right now, please see the Lighthouse section below.": "Nous ne pouvons pas répondre aux commentaires anonymes. Si tu as besoin d'aide tout de suite, va voir la section du Phare, plus bas.",
   "Create a free account to send a comment.": "Crée un compte gratuit pour envoyer un commentaire.",
+  "Support our crowdfunding": "Soutiens notre financement participatif",
+  "Help Eunora reach more teens": "Aide Eunora à toucher plus d'ados",
+  "Follow us on Instagram": "Suis-nous sur Instagram",
+  "Stories, news and updates": "Stories, actualités et nouveautés",
+  "Email us": "Écris-nous",
+  "Coming soon": "Bientôt disponible",
+  "Stay connected": "Restons en contact",
+  "Support Eunora, follow along or just say hello.": "Soutiens Eunora, suis-nous ou dis simplement bonjour.",
 }
